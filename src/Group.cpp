@@ -339,7 +339,6 @@ void FLED::BiDirectionVerification(GPSD &fitComb, vector < cv::Vec<double, MAT_N
 	int fit_num = fitComb.usesize(), idx_l, idx_r, num_idx_l, num_idx_r;
 	cv::RotatedRect fitelpres;
 
-	bool isCombValid = true;
 	int linked_num, linking_num, *_linked_data(NULL), *_linking_data(NULL), idx_link;
 	char *_link_data = LinkMatrix.GetDataPoint();
 	int arcs_num = FSA_ArcContours.size();
@@ -352,6 +351,7 @@ void FLED::BiDirectionVerification(GPSD &fitComb, vector < cv::Vec<double, MAT_N
 
 	for (int i = 0; i < fit_num; i++)
 	{
+		bool isCombValid = true;
 		if (fitComb[i]->val < 0) //ÅÐ¶ÏÊÇ·ñÓÐÐ§
 			break;
 		bool fitres;
