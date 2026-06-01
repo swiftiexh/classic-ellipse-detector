@@ -1,0 +1,33 @@
+Single-image detector output:
+Pre-Processing: 15.8171 ms.
+Arc Segmentation: 0.1069 ms.
+Arc Grouping: 0.2245 ms.
+Ellipse Fitting: 0.2163 ms, 13.00 times, 0.0166 ms/time
+Ellipse Validation: 0.0982 ms, 11.00 times, 0.0089 ms/time
+Ellipse Cluster: 0.0006 ms.
+Total: 16.4636 ms.
+Input: data\images\002_0038.jpg
+Detections: 1
+Saved image: output\baseline_single\detected.png
+Saved results: output\baseline_single\002_0038.jpg.fled.txt
+Saved debug artifacts: output\baseline_single\debug
+
+Single-image evaluation output:
+Images: 1
+PositiveMatches: 1
+DetectedCount: 1
+GroundTruthCount: 1
+Precision: 1.000000
+Recall: 1.000000
+FMeasure: 1.000000
+AverageDetectedTimeMs: 16.463600
+
+Prasad official-result evaluation output:
+Images: 198
+PositiveMatches: 462
+DetectedCount: 599
+GroundTruthCount: 1165
+Precision: 0.771285
+Recall: 0.396567
+FMeasure: 0.523810
+AverageDetectedTimeMs: 5.146824

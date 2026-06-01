@@ -15,14 +15,17 @@ struct DemoOptions
 	fs::path outputDir = fs::path(AAMED_OPENCV_PROJECT_ROOT) / "output";
 	bool exportDebug = false;
 	bool quiet = false;
+	double T_val = 0.77;
+	double kd_radius_mul = 1.0;
+	int region_bypass = 0;
 };
 
 void printUsage()
 {
 	std::cout
-		<< "Usage: aamed_demo [--input <image>] [--output-dir <dir>] [--export-debug] [--quiet]\n"
+		<< "Usage: aamed_demo [--input <image>] [--output-dir <dir>] [--T-val <0.0-1.0>] [--kd-mul <1.0-N>] [--region-bypass <0|1|2>] [--export-debug] [--quiet]\n"
 		<< "Example:\n"
-		<< "  aamed_demo --input data/images/002_0038.jpg --output-dir output --export-debug\n";
+		<< "  aamed_demo --input data/images/002_0038.jpg --output-dir output --T-val 0.5 --export-debug\n";
 }
 
 bool parseArgs(int argc, char **argv, DemoOptions &options)
@@ -37,6 +40,18 @@ bool parseArgs(int argc, char **argv, DemoOptions &options)
 		else if (arg == "--output-dir" && idx + 1 < argc)
 		{
 			options.outputDir = argv[++idx];
+		}
+		else if (arg == "--T-val" && idx + 1 < argc)
+		{
+			options.T_val = std::stod(argv[++idx]);
+		}
+		else if (arg == "--kd-mul" && idx + 1 < argc)
+		{
+			options.kd_radius_mul = std::stod(argv[++idx]);
+		}
+		else if (arg == "--region-bypass" && idx + 1 < argc)
+		{
+			options.region_bypass = std::stoi(argv[++idx]);
 		}
 		else if (arg == "--export-debug")
 		{
@@ -108,7 +123,9 @@ int main(int argc, char **argv)
 	cv::cvtColor(imgColor, imgGray, cv::COLOR_BGR2GRAY);
 
 	AAMED aamed(imgGray.rows + 16, imgGray.cols + 16);
-	aamed.SetParameters(CV_PI / 3, 3.4, 0.77);
+	aamed.SetParameters(CV_PI / 3, 3.4, options.T_val);
+	aamed.SetKDTotalRadiusMul(options.kd_radius_mul);
+	aamed.SetRegionBypass(options.region_bypass);
 	aamed.run_FLED(imgGray);
 
 	cv::Vec<double, 10> detailTime = cv::Vec<double, 10>::all(0);

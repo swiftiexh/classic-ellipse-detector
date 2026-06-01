@@ -1,0 +1,45 @@
+SCC-GeoFilter generation output:
+loose: images=198 before=584 after=583 removed=1
+medium: images=198 before=584 after=583 removed=1
+strict: images=198 before=584 after=579 removed=5
+elapsed_ms=1157.212
+
+Baseline evaluation:
+Images: 198
+PositiveMatches: 462
+DetectedCount: 599
+GroundTruthCount: 1165
+Precision: 0.771285
+Recall: 0.396567
+FMeasure: 0.523810
+AverageDetectedTimeMs: 5.146824
+
+SCC loose evaluation:
+Images: 198
+PositiveMatches: 462
+DetectedCount: 598
+GroundTruthCount: 1165
+Precision: 0.772575
+Recall: 0.396567
+FMeasure: 0.524107
+AverageDetectedTimeMs: 5.146824
+
+SCC medium evaluation:
+Images: 198
+PositiveMatches: 462
+DetectedCount: 598
+GroundTruthCount: 1165
+Precision: 0.772575
+Recall: 0.396567
+FMeasure: 0.524107
+AverageDetectedTimeMs: 5.146824
+
+SCC strict evaluation:
+Images: 198
+PositiveMatches: 461
+DetectedCount: 594
+GroundTruthCount: 1165
+Precision: 0.776094
+Recall: 0.395708
+FMeasure: 0.524161
+AverageDetectedTimeMs: 5.146824

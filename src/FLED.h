@@ -42,6 +42,8 @@ class FLED
 public:
 	FLED(int drows, int dcols);
 	void SetParameters(double theta_fsa, double length_fsa, double T_val);
+	void SetKDTotalRadiusMul(double mul) { _kd_radius_mul = mul; }
+	void SetRegionBypass(int level) { _region_bypass = level; }
 	vector<cv::RotatedRect> detEllipses;
 	~FLED()
 	{
@@ -135,6 +137,8 @@ private: //The list of parameters.
 	// The list of adaptive parameters
 	double _T_edge_num; //Independent of image size
 	double _T_min_minor; //Independent of image size
+	double _kd_radius_mul = 1.0;
+	int _region_bypass = 0;
 
 private:
 	double sum_time;

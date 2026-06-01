@@ -1,0 +1,811 @@
+{
+  "params": {
+    "name": "light",
+    "clahe_clip_limit": 2.0,
+    "clahe_tile_grid": [
+      8,
+      8
+    ],
+    "bilateral_d": 5,
+    "bilateral_sigma_color": 50.0,
+    "bilateral_sigma_space": 50.0
+  },
+  "total": 198,
+  "success": 198,
+  "failed": 0,
+  "total_detections": 609,
+  "images": {
+    "002_0038.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "003_0144.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "008_0132.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "011_0018.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "011_0042.jpg": {
+      "status": "ok",
+      "detections": 6
+    },
+    "011_0100.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "012_0001.jpg": {
+      "status": "ok",
+      "detections": 10
+    },
+    "012_0033.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "012_0190.jpg": {
+      "status": "ok",
+      "detections": 8
+    },
+    "014_0015.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "014_0033.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "015_0027.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "016_0033.jpg": {
+      "status": "ok",
+      "detections": 11
+    },
+    "016_0059.jpg": {
+      "status": "ok",
+      "detections": 7
+    },
+    "017_0048.jpg": {
+      "status": "ok",
+      "detections": 8
+    },
+    "017_0077.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "017_0078.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "018_0064.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "018_0076.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "018_0081.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "026_0025.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "027_0003.jpg": {
+      "status": "ok",
+      "detections": 28
+    },
+    "029_0001.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "029_0005.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "031_0008.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "031_0011.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "031_0012.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "031_0035.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "031_0038.jpg": {
+      "status": "ok",
+      "detections": 15
+    },
+    "031_0051.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "031_0078.jpg": {
+      "status": "ok",
+      "detections": 6
+    },
+    "032_0002.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "032_0052.jpg": {
+      "status": "ok",
+      "detections": 6
+    },
+    "033_0022.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "033_0034.jpg": {
+      "status": "ok",
+      "detections": 8
+    },
+    "033_0053.jpg": {
+      "status": "ok",
+      "detections": 9
+    },
+    "037_0081.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "039_0007.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "039_0032.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "039_0037.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "039_0081.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "040_0005.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "041_0014.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "041_0020.jpg": {
+      "status": "ok",
+      "detections": 7
+    },
+    "041_0028.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "043_0045.jpg": {
+      "status": "ok",
+      "detections": 17
+    },
+    "043_0046.jpg": {
+      "status": "ok",
+      "detections": 12
+    },
+    "043_0070.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "044_0007.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "044_0040.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "044_0047.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "044_0084.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "047_0023.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "047_0094.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "050_0015.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "051_0081.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "053_0054.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "054_0006.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "055_0081.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "059_0042.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "059_0044.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "061_0034.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "061_0043.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "061_0089.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "062_0040.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "066_0006.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "067_0009.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "067_0033.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "071_0056.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "074_0030.jpg": {
+      "status": "ok",
+      "detections": 22
+    },
+    "075_0033.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "076_0010.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "078_0012.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "078_0075.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "079_0033.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "081_0038.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "081_0057.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "081_0062.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "081_0083.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "082_0021.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "083_0068.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "088_0003.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "088_0069.jpg": {
+      "status": "ok",
+      "detections": 7
+    },
+    "088_0071.jpg": {
+      "status": "ok",
+      "detections": 6
+    },
+    "088_0096.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "091_0084.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "095_0002.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "097_0065.jpg": {
+      "status": "ok",
+      "detections": 7
+    },
+    "097_0083.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "101_0012.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "107_0035.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "108_0028.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "108_0075.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "109_0018.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "112_0024.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "113_0002.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "114_0003.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "114_0084.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "115_0073.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "115_0078.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "117_0003.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "117_0036.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "120_0002.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "120_0025.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "120_0037.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "125_0022.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "126_0169.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "127_0049.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "130_0017.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "130_0018.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "136_0063.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "137_0008.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "137_0029.jpg": {
+      "status": "ok",
+      "detections": 6
+    },
+    "139_0016.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "139_0018.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "139_0035.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "140_0038.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "141_0095.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "145_0050.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "145_0054.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "145_0175.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "145_0192.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "145_0205.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "145_0222.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "145_0232.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "145_0233.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "145_0256.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "145_0271.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "146_0007.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "146_0012.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "146_0017.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "146_0018.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "146_0052.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "146_0076.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "147_0089.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "148_0010.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "148_0157.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "153_0012.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "153_0028.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "153_0045.jpg": {
+      "status": "ok",
+      "detections": 8
+    },
+    "153_0061.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "153_0067.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "153_0071.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "155_0024.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "155_0026.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "155_0029.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "155_0033.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "155_0036.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "155_0046.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "156_0094.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "158_0131.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "159_0021.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "160_0012.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "161_0010.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "163_0014.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "163_0037.jpg": {
+      "status": "ok",
+      "detections": 8
+    },
+    "163_0065.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "163_0085.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "165_0063.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "166_0069.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "167_0025.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "169_0001.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "169_0015.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "169_0035.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "169_0049.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "174_0043.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "175_0006.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "175_0026.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "177_0029.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "177_0074.jpg": {
+      "status": "ok",
+      "detections": 12
+    },
+    "177_0079.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "181_0003.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "182_0045.jpg": {
+      "status": "ok",
+      "detections": 7
+    },
+    "185_0024.jpg": {
+      "status": "ok",
+      "detections": 7
+    },
+    "185_0085.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "191_0101.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "193_0094.jpg": {
+      "status": "ok",
+      "detections": 6
+    },
+    "195_0039.jpg": {
+      "status": "ok",
+      "detections": 7
+    },
+    "199_0001.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "199_0085.jpg": {
+      "status": "ok",
+      "detections": 9
+    },
+    "200_0056.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "200_0091.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "202_0088.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "204_0010.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "207_0018.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "210_0038.jpg": {
+      "status": "ok",
+      "detections": 0
+    },
+    "210_0042.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "212_0001.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "212_0004.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "214_0035.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "216_0011.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "216_0020.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "216_0053.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "218_0059.jpg": {
+      "status": "ok",
+      "detections": 4
+    },
+    "219_0029.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "221_0079.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "221_0093.jpg": {
+      "status": "ok",
+      "detections": 5
+    },
+    "226_0044.jpg": {
+      "status": "ok",
+      "detections": 6
+    }
+  }
+}

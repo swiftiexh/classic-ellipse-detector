@@ -1,0 +1,40 @@
+{
+  "sample_count": 10,
+  "image_names": [
+    "002_0038.jpg",
+    "003_0144.jpg",
+    "008_0132.jpg",
+    "011_0018.jpg",
+    "011_0042.jpg",
+    "011_0100.jpg",
+    "012_0001.jpg",
+    "012_0033.jpg",
+    "012_0190.jpg",
+    "014_0015.jpg"
+  ],
+  "output_dir": "E:\\scc_desk\\Net\\classic-ellipse-detector\\output\\scc_geofilter_sanity_strict",
+  "summary": {
+    "params": {
+      "name": "sanity_strict",
+      "max_axis_ratio": 4.0,
+      "min_area_ratio": 0.001,
+      "max_area_ratio": 0.85,
+      "center_margin_ratio": 0.0,
+      "bbox_margin_ratio": 0.1
+    },
+    "images": 10,
+    "totals": {
+      "before": 31,
+      "after": 31,
+      "removed": 0,
+      "removed_nonpositive_axis": 0,
+      "removed_axis_ratio": 0,
+      "removed_area_small": 0,
+      "removed_area_large": 0,
+      "removed_center": 0,
+      "removed_bbox": 0,
+      "removed_malformed": 0
+    },
+    "retained_ratio": 1.0
+  }
+}

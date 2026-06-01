@@ -1,0 +1,80 @@
+{
+  "elapsed_ms": 1157.2119000002203,
+  "baseline_dir": "E:\\scc_desk\\Net\\classic-ellipse-detector\\datasets\\prasad\\AAMED",
+  "image_dir": "E:\\scc_desk\\Net\\classic-ellipse-detector\\datasets\\prasad\\images",
+  "image_names": "E:\\scc_desk\\Net\\classic-ellipse-detector\\datasets\\prasad\\imagenames.txt",
+  "summaries": {
+    "loose": {
+      "params": {
+        "name": "loose",
+        "max_axis_ratio": 10.0,
+        "min_area_ratio": 0.0002,
+        "max_area_ratio": 1.5,
+        "center_margin_ratio": 0.1,
+        "bbox_margin_ratio": 0.35
+      },
+      "images": 198,
+      "totals": {
+        "before": 584,
+        "after": 583,
+        "removed": 1,
+        "removed_nonpositive_axis": 0,
+        "removed_axis_ratio": 0,
+        "removed_area_small": 0,
+        "removed_area_large": 0,
+        "removed_center": 0,
+        "removed_bbox": 1,
+        "removed_malformed": 0
+      },
+      "retained_ratio": 0.9982876712328768
+    },
+    "medium": {
+      "params": {
+        "name": "medium",
+        "max_axis_ratio": 6.0,
+        "min_area_ratio": 0.0005,
+        "max_area_ratio": 1.1,
+        "center_margin_ratio": 0.05,
+        "bbox_margin_ratio": 0.2
+      },
+      "images": 198,
+      "totals": {
+        "before": 584,
+        "after": 583,
+        "removed": 1,
+        "removed_nonpositive_axis": 0,
+        "removed_axis_ratio": 0,
+        "removed_area_small": 0,
+        "removed_area_large": 0,
+        "removed_center": 0,
+        "removed_bbox": 1,
+        "removed_malformed": 0
+      },
+      "retained_ratio": 0.9982876712328768
+    },
+    "strict": {
+      "params": {
+        "name": "strict",
+        "max_axis_ratio": 4.0,
+        "min_area_ratio": 0.001,
+        "max_area_ratio": 0.85,
+        "center_margin_ratio": 0.0,
+        "bbox_margin_ratio": 0.1
+      },
+      "images": 198,
+      "totals": {
+        "before": 584,
+        "after": 579,
+        "removed": 5,
+        "removed_nonpositive_axis": 0,
+        "removed_axis_ratio": 1,
+        "removed_area_small": 0,
+        "removed_area_large": 0,
+        "removed_center": 0,
+        "removed_bbox": 4,
+        "removed_malformed": 0
+      },
+      "retained_ratio": 0.9914383561643836
+    }
+  }
+}

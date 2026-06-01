@@ -1,0 +1,14 @@
+Build note:
+cmake was not available in the current PATH. The baseline binaries were built with MSVC after loading Visual Studio 2022 Community developer environment.
+
+OpenCV runtime path:
+E:\OPENCV\opencv\build\x64\vc16\bin
+
+Single-image baseline command:
+cmd /c 'set PATH=E:\OPENCV\opencv\build\x64\vc16\bin;%PATH% && build\bin\aamed_demo.exe --input data\images\002_0038.jpg --output-dir output\baseline_single --export-debug'
+
+Single-image evaluation command:
+build\bin\aamed_eval.exe --dataset-root data --results-dir output\baseline_single --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\baseline_single_eval_result.txt
+
+Prasad official-result evaluation command:
+build\bin\aamed_eval.exe --dataset-root datasets\prasad --results-dir datasets\prasad\AAMED --gt-prefix gt_ --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\prasad_official_aamed_eval_result.txt

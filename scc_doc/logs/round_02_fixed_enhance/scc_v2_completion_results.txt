@@ -1,0 +1,42 @@
+V2 completion results
+=====================
+
+Sanity generation output:
+sanity_strict: images=10 before=31 after=31 removed=0
+
+Sanity output count:
+10 .fled.txt files in output\scc_geofilter_sanity_strict
+
+Sanity evaluation:
+Images: 10
+PositiveMatches: 16
+DetectedCount: 31
+GroundTruthCount: 52
+Precision: 0.516129
+Recall: 0.307692
+FMeasure: 0.385542
+AverageDetectedTimeMs: 6.842610
+
+Visualization output:
+scc_doc\figures\baseline_case_001.png
+scc_doc\figures\scc_case_001.png
+scc_doc\figures\success_case_001.png
+scc_doc\figures\failure_case_001.png
+
+Full baseline:
+Precision: 0.771285
+Recall: 0.396567
+FMeasure: 0.523810
+AverageDetectedTimeMs: 5.146824
+
+Full SCC-Strict:
+Precision: 0.776094
+Recall: 0.395708
+FMeasure: 0.524161
+AverageDetectedTimeMs: 5.146824
+
+Deltas:
+Delta Precision: +0.004809
+Delta Recall: -0.000859
+Delta FMeasure: +0.000351
+Delta AverageDetectedTimeMs: +0.000000

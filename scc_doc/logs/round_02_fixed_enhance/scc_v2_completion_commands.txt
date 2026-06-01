@@ -1,0 +1,20 @@
+V2 completion commands
+======================
+
+Python syntax check:
+D:\anaconda3\python.exe -m py_compile scc_experiments\scc_geofilter.py scc_experiments\run_scc_geofilter_prasad.py scc_experiments\run_scc_geofilter_sanity.py
+
+Sanity generation:
+D:\anaconda3\python.exe scc_experiments\run_scc_geofilter_sanity.py
+
+Sanity evaluation:
+build\bin\aamed_eval.exe --imagenames output\scc_geofilter_sanity_strict\imagenames.txt --gt-dir datasets\prasad\gt --results-dir output\scc_geofilter_sanity_strict --gt-prefix gt_ --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\scc_geofilter_sanity_strict_eval_result.txt
+
+Visualization:
+powershell -ExecutionPolicy Bypass -File scc_experiments\visualize_scc_cases.ps1
+
+Full baseline evaluation reused:
+build\bin\aamed_eval.exe --dataset-root datasets\prasad --results-dir datasets\prasad\AAMED --gt-prefix gt_ --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\prasad_official_aamed_eval_result.txt
+
+Full SCC-Strict evaluation reused:
+build\bin\aamed_eval.exe --dataset-root datasets\prasad --results-dir output\scc_geofilter_prasad_strict --gt-prefix gt_ --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\scc_geofilter_prasad_strict_eval_result.txt

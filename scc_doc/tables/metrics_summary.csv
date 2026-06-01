@@ -1,0 +1,9 @@
+method,precision,recall,fmeasure,average_detected_time_ms,notes
+official_aamed_baseline,0.771285,0.396567,0.523810,5.146824,datasets/prasad/AAMED
+scc_geofilter_loose,0.772575,0.396567,0.524107,5.146824,postprocess hard filter
+scc_geofilter_medium,0.772575,0.396567,0.524107,5.146824,postprocess hard filter
+scc_geofilter_strict,0.776094,0.395708,0.524161,5.146824,best geofilter by FMeasure
+fixed_detector_baseline,0.779070,0.402575,0.530843,14.952466,Group.cpp isCombValid bugfix
+scc_enhance_light,0.728296,0.388841,0.506995,15.036036,fixed detector + light preprocessing
+scc_enhance_medium,0.727119,0.368240,0.488889,17.242711,fixed detector + medium preprocessing
+scc_enhance_strong,0.783985,0.361373,0.494712,15.353225,fixed detector + strong preprocessing

@@ -1,0 +1,59 @@
+{
+  "params": {
+    "name": "light",
+    "clahe_clip_limit": 2.0,
+    "clahe_tile_grid": [
+      8,
+      8
+    ],
+    "bilateral_d": 5,
+    "bilateral_sigma_color": 50.0,
+    "bilateral_sigma_space": 50.0
+  },
+  "total": 10,
+  "success": 10,
+  "failed": 0,
+  "total_detections": 37,
+  "images": {
+    "002_0038.jpg": {
+      "status": "ok",
+      "detections": 1
+    },
+    "003_0144.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "008_0132.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "011_0018.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "011_0042.jpg": {
+      "status": "ok",
+      "detections": 6
+    },
+    "011_0100.jpg": {
+      "status": "ok",
+      "detections": 2
+    },
+    "012_0001.jpg": {
+      "status": "ok",
+      "detections": 10
+    },
+    "012_0033.jpg": {
+      "status": "ok",
+      "detections": 3
+    },
+    "012_0190.jpg": {
+      "status": "ok",
+      "detections": 8
+    },
+    "014_0015.jpg": {
+      "status": "ok",
+      "detections": 1
+    }
+  }
+}

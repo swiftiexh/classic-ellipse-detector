@@ -1,0 +1,27 @@
+Environment:
+Project root: E:\scc_desk\Net\classic-ellipse-detector
+Python used: D:\anaconda3\python.exe
+Evaluation tool: build\bin\aamed_eval.exe
+
+Python launcher note:
+The command `python scc_experiments\run_scc_geofilter_prasad.py` failed in the current PowerShell session with:
+程序“python.exe”无法运行: 指定的登录会话不存在。可能已被终止。
+The same script was then run successfully with D:\anaconda3\python.exe.
+
+SCC-GeoFilter generation:
+D:\anaconda3\python.exe scc_experiments\run_scc_geofilter_prasad.py
+
+Syntax check:
+D:\anaconda3\python.exe -m py_compile scc_experiments\scc_geofilter.py scc_experiments\run_scc_geofilter_prasad.py
+
+Baseline evaluation:
+build\bin\aamed_eval.exe --dataset-root datasets\prasad --results-dir datasets\prasad\AAMED --gt-prefix gt_ --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\prasad_official_aamed_eval_result.txt
+
+SCC loose evaluation:
+build\bin\aamed_eval.exe --dataset-root datasets\prasad --results-dir output\scc_geofilter_prasad_loose --gt-prefix gt_ --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\scc_geofilter_prasad_loose_eval_result.txt
+
+SCC medium evaluation:
+build\bin\aamed_eval.exe --dataset-root datasets\prasad --results-dir output\scc_geofilter_prasad_medium --gt-prefix gt_ --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\scc_geofilter_prasad_medium_eval_result.txt
+
+SCC strict evaluation:
+build\bin\aamed_eval.exe --dataset-root datasets\prasad --results-dir output\scc_geofilter_prasad_strict --gt-prefix gt_ --gt-format plain_rad --result-format aamed_fled --overlap 0.8 --report output\scc_geofilter_prasad_strict_eval_result.txt

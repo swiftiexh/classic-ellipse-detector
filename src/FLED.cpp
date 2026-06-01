@@ -484,7 +484,7 @@ void FLED::Arcs_Grouping(vector< vector<Point> > &fsaarcs)
 		vecFeature[1].x = l1[3]->x - l1[2]->x; vecFeature[1].y = l1[3]->y - l1[2]->y; //Aend-1Aend
 		vecFeature[2].x = l1[3]->x - l1[0]->x; vecFeature[2].y = l1[3]->y - l1[0]->y;
 
-		dist_l = abs(l1[0]->x - l1[3]->x) + abs(l1[0]->y - l1[3]->y); //KD-Tree Search Radius.
+		dist_l = int((abs(l1[0]->x - l1[3]->x) + abs(l1[0]->y - l1[3]->y)) * _kd_radius_mul); //KD-Tree Search Radius.
 		query_arcs[0] = l1[3]->x; query_arcs[1] = l1[3]->y; // KD-Tree Search root.
 		//利用kd树，搜索满足距离约束的点
 		searchNum = kdTree_Arcs.radiusSearch(query_arcs, indices_arcs, dist_arcs, dist_l, maxArcs);
@@ -547,7 +547,7 @@ void FLED::Arcs_Grouping(vector< vector<Point> > &fsaarcs)
 			case FLED_GROUPING_FBmA1_FAnB1:// 搜索点与尾点宽度都较远
 			{
 				//group_res = CASE_1(&asr1, &asr2);
-				group_res = CASE_1(_asr1, _asr2);
+				group_res = _region_bypass >= 2 ? 1 : CASE_1(_asr1, _asr2);
 				//case_stat[0]++;
 				//group_res = Group4FAnB1_FBmA1(vecFeature, l1, l2);
 				//group_res = Group4FAnB1_FBmA1(vecFeature, l1, l2, &asr1, &asr2);
@@ -555,13 +555,13 @@ void FLED::Arcs_Grouping(vector< vector<Point> > &fsaarcs)
 			}
 			case FLED_GROUPING_FBmA1_CAnB1:// 搜索点较近，尾点较远
 			{
-				group_res = Group4CAnB1_FBmA1(vecFeature, l1, l2);
+				group_res = _region_bypass >= 2 ? 1 : Group4CAnB1_FBmA1(vecFeature, l1, l2);
 				//case_stat[1]++;
 				break;
 			}
 			case FLED_GROUPING_CBmA1_FAnB1:// 搜索点较远，尾点较近
 			{
-				group_res = Group4FAnB1_CBmA1(vecFeature, l1, l2);
+				group_res = _region_bypass >= 2 ? 1 : Group4FAnB1_CBmA1(vecFeature, l1, l2);
 				//case_stat[2]++;
 				break;
 			}
@@ -576,7 +576,7 @@ void FLED::Arcs_Grouping(vector< vector<Point> > &fsaarcs)
 					}
 				}
 				else
-					group_res = Group4CAnB1_CBmA1(vecFeature, l1, l2);
+					group_res = _region_bypass >= 2 ? 1 : Group4CAnB1_CBmA1(vecFeature, l1, l2);
 
 				//case_stat[3]++;
 
