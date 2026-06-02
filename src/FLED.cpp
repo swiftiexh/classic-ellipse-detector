@@ -1,6 +1,7 @@
 #include "FLED.h"
 #include "adaptApproximateContours.h"
 #include "EllipseNonMaximumSuppression.h"
+#include "VisibilityValidation.h"
 
 FLED::FLED(int drows, int dcols)
 {
@@ -414,6 +415,8 @@ void FLED::run_FLED(Mat Img_G)
 #elif SELECT_CLUSTER_METHOD == PRASAD_CLUSTER_METHOD
 	ClusterEllipses(detEllipses, detEllipseScore);
 #endif
+	if (!detEllipses.empty())
+		VisibilityValidation::ValidateAndDedup(imgCanny, detEllipses, detEllipseScore, 0.05, 0.5);
 	asrs.clear();
 	//cout << vld_use_time << endl;
 
