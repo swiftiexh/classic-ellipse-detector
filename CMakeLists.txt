@@ -22,6 +22,7 @@ set(AAMED_CORE_SOURCES
     src/Node_FC.cpp
     src/Segmentation.cpp
     src/Validation.cpp
+    src/VisibilityValidation.cpp
 )
 
 add_library(aamed_core STATIC ${AAMED_CORE_SOURCES})
