@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cmake: configure (VS2022 Debug)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--preset",
+        "vs2022-debug"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: build Debug",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "build-vs",
+        "--config",
+        "Debug"
+      ],
+      "dependsOn": "cmake: configure (VS2022 Debug)",
+      "group": "build",
+      "problemMatcher": [
+        "$msCompile"
+      ]
+    }
+  ]
+}

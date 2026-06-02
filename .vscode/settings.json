@@ -1,0 +1,6 @@
+{
+  "cmake.configurePreset": "vs2022-debug",
+  "cmake.buildDirectory": "${workspaceFolder}/build-vs",
+  "cmake.configureOnOpen": true,
+  "cmake.showOptionsMovedNotification": false
+}

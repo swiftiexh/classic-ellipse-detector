@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "vs2022-debug",
+      "displayName": "VS2022 Debug",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build-vs",
+      "cacheVariables": {
+        "OpenCV_DIR": "D:/OpenCV/Build",
+        "CMAKE_CONFIGURATION_TYPES": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    }
+  ]
+}

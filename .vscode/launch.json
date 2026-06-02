@@ -1,0 +1,52 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "aamed_demo (Debug)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}\\build-vs\\bin\\Debug\\aamed_demo.exe",
+      "args": [
+        "--export-debug"
+      ],
+      "cwd": "${workspaceFolder}",
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "D:\\OpenCV\\Build\\install\\x64\\vc17\\bin;${env:PATH}"
+        }
+      ],
+      "console": "integratedTerminal",
+      "preLaunchTask": "cmake: build Debug"
+    },
+    {
+      "name": "aamed_eval (Debug)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}\\build-vs\\bin\\Debug\\aamed_eval.exe",
+      "args": [
+        "--dataset-root",
+        "${workspaceFolder}\\data",
+        "--results-dir",
+        "${workspaceFolder}\\output",
+        "--gt-format",
+        "plain_rad",
+        "--result-format",
+        "aamed_fled",
+        "--overlap",
+        "0.8",
+        "--report",
+        "eval_result.txt"
+      ],
+      "cwd": "${workspaceFolder}",
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "D:\\OpenCV\\Build\\install\\x64\\vc17\\bin;${env:PATH}"
+        }
+      ],
+      "console": "integratedTerminal",
+      "preLaunchTask": "cmake: build Debug"
+    }
+  ]
+}
