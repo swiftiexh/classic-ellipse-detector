@@ -108,8 +108,13 @@ int main(int argc, char **argv)
 	cv::cvtColor(imgColor, imgGray, cv::COLOR_BGR2GRAY);
 
 	AAMED aamed(imgGray.rows + 16, imgGray.cols + 16);
-	aamed.SetParameters(CV_PI / 3, 3.4, 0.77);
+	
+	aamed.SetParameters(CV_PI / 3.0, 3.0, 0.76);
 	aamed.run_FLED(imgGray);
+	
+	cv::Mat edgeImg;
+    cv::Canny(imgGray, edgeImg, 50, 150);
+	aamed.EnhancedPostProcessingWithVisibility(edgeImg, 0.62, 0.45, 0.04);
 
 	cv::Vec<double, 10> detailTime = cv::Vec<double, 10>::all(0);
 	aamed.showDetailBreakdown(detailTime, options.quiet ? 0 : 1);

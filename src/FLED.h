@@ -10,6 +10,7 @@
 #include "definition.h"
 #include "LinkMatrix.h"
 #include "EllipseConstraint.h"
+#include "VisibilityValidation.h"
 
 #define dIDX(i,j) i*dCOLS+j
 #define iIDX(i,j) i*iCOLS+j
@@ -55,6 +56,11 @@ public:
     bool checkInputImage(int rows, int cols);
 	void run_FLED(Mat Img_G);
 	void run_AAMED_WithoutCanny(Mat Img_G);
+	void SetEnhancedParameters(double theta_fsa, double length_fsa, double T_val,
+		double minConfidence = 0.8, double minEllipseSize = 10.0);
+	void EnhancedPostProcessing(double confidenceThreshold = 0.8, double iouThreshold = 0.5);
+	void EnhancedPostProcessingWithVisibility(const cv::Mat &edgeImg, 
+		double confidenceThreshold = 0.8, double iouThreshold = 0.5, double minCoverage = 0.1);
 public:// Draw Data and Write Information Functions
 	void drawEdgeContours();
 	void drawDPContours();
@@ -135,6 +141,9 @@ private: //The list of parameters.
 	// The list of adaptive parameters
 	double _T_edge_num; //Independent of image size
 	double _T_min_minor; //Independent of image size
+	// Enhancement parameters
+	double _min_confidence;
+	double _min_ellipse_size;
 
 private:
 	double sum_time;

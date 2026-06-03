@@ -17,6 +17,7 @@ set(AAMED_CORE_SOURCES
     src/FLED_drawAndWriteFunctions.cpp
     src/FLED_Initialization.cpp
     src/FLED_PrivateFunctions.cpp
+    src/FLED_Enhancement.cpp
     src/Group.cpp
     src/LinkMatrix.cpp
     src/Node_FC.cpp
