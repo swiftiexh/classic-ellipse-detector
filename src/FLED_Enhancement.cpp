@@ -1,6 +1,9 @@
 #include "FLED.h"
 #include <numeric>
 #include <algorithm>
+#include <cmath>
+#include <vector>
+#include <map>
 
 namespace {
 
@@ -22,6 +25,155 @@ bool isValidEllipse(const cv::RotatedRect& ellipse, double minSize = 5.0, double
     if (ellipse.size.width <= 0 || ellipse.size.height <= 0) return false;
     
     return true;
+}
+
+double calculateEdgeContinuity(const cv::Mat& edgeImg, const cv::RotatedRect& ellipse, int samplePoints = 36) {
+    if (edgeImg.empty()) return 1.0;
+    
+    int count = 0;
+    int validPoints = 0;
+    
+    for (int i = 0; i < samplePoints; ++i) {
+        double angle = 2 * CV_PI * i / samplePoints;
+        double x = ellipse.center.x + ellipse.size.width / 2.0 * cos(angle);
+        double y = ellipse.center.y + ellipse.size.height / 2.0 * sin(angle);
+        
+        if (x >= 0 && x < edgeImg.cols && y >= 0 && y < edgeImg.rows) {
+            validPoints++;
+            if (edgeImg.at<uchar>(cv::Point(x, y)) > 0) {
+                count++;
+            }
+        }
+    }
+    
+    return validPoints > 0 ? static_cast<double>(count) / validPoints : 0.0;
+}
+
+double calculateShapeConsistency(const cv::RotatedRect& ellipse) {
+    double width = ellipse.size.width;
+    double height = ellipse.size.height;
+    double ratio = std::min(width, height) / std::max(width, height);
+    
+    double aspectScore = std::min(1.0, ratio * 4);
+    double roundnessScore = 1.0 - std::abs(1.0 - ratio) * 0.5;
+    
+    return (aspectScore + roundnessScore) / 2.0;
+}
+
+void adaptiveThresholdFilter(std::vector<cv::RotatedRect>& ellipses, 
+                             std::vector<double>& scores,
+                             const cv::Mat& edgeImg) {
+    if (ellipses.empty()) return;
+    
+    std::vector<double> continuityScores;
+    double avgContinuity = 0.0;
+    
+    for (const auto& ellipse : ellipses) {
+        double cont = calculateEdgeContinuity(edgeImg, ellipse);
+        continuityScores.push_back(cont);
+        avgContinuity += cont;
+    }
+    
+    avgContinuity /= ellipses.size();
+    double adaptiveThreshold = std::max(0.3, avgContinuity * 0.7);
+    
+    std::vector<cv::RotatedRect> filtered;
+    std::vector<double> filteredScores;
+    
+    for (size_t i = 0; i < ellipses.size(); ++i) {
+        double combinedScore = scores[i] * 0.6 + continuityScores[i] * 0.4;
+        if (continuityScores[i] >= adaptiveThreshold && combinedScore > 0.3) {
+            filtered.push_back(ellipses[i]);
+            filteredScores.push_back(combinedScore);
+        }
+    }
+    
+    ellipses.swap(filtered);
+    scores.swap(filteredScores);
+}
+
+void clusterEllipsesByCenter(std::vector<cv::RotatedRect>& ellipses, 
+                             std::vector<double>& scores,
+                             double clusterDistance = 20.0) {
+    if (ellipses.empty()) return;
+    
+    std::vector<bool> processed(ellipses.size(), false);
+    std::vector<cv::RotatedRect> finalEllipses;
+    std::vector<double> finalScores;
+    
+    for (size_t i = 0; i < ellipses.size(); ++i) {
+        if (processed[i]) continue;
+        
+        std::vector<size_t> cluster;
+        cluster.push_back(i);
+        processed[i] = true;
+        
+        for (size_t j = i + 1; j < ellipses.size(); ++j) {
+            if (processed[j]) continue;
+            
+            double dx = ellipses[i].center.x - ellipses[j].center.x;
+            double dy = ellipses[i].center.y - ellipses[j].center.y;
+            double dist = std::sqrt(dx * dx + dy * dy);
+            
+            if (dist < clusterDistance) {
+                cluster.push_back(j);
+                processed[j] = true;
+            }
+        }
+        
+        if (cluster.size() == 1) {
+            finalEllipses.push_back(ellipses[i]);
+            finalScores.push_back(scores[i]);
+        } else {
+            int bestIdx = cluster[0];
+            double bestScore = scores[cluster[0]];
+            
+            for (size_t k = 1; k < cluster.size(); ++k) {
+                if (scores[cluster[k]] > bestScore) {
+                    bestScore = scores[cluster[k]];
+                    bestIdx = cluster[k];
+                }
+            }
+            
+            finalEllipses.push_back(ellipses[bestIdx]);
+            finalScores.push_back(bestScore);
+        }
+    }
+    
+    ellipses.swap(finalEllipses);
+    scores.swap(finalScores);
+}
+
+void refineEllipseFit(std::vector<cv::RotatedRect>& ellipses, const cv::Mat& edgeImg) {
+    if (ellipses.empty() || edgeImg.empty()) return;
+    
+    for (auto& ellipse : ellipses) {
+        std::vector<cv::Point> edgePoints;
+        int sampleRadius = std::max(3, static_cast<int>(std::min(ellipse.size.width, ellipse.size.height) / 4));
+        
+        for (int r = -sampleRadius; r <= sampleRadius; ++r) {
+            for (int c = -sampleRadius; c <= sampleRadius; ++c) {
+                int x = static_cast<int>(ellipse.center.x) + c;
+                int y = static_cast<int>(ellipse.center.y) + r;
+                
+                if (x >= 0 && x < edgeImg.cols && y >= 0 && y < edgeImg.rows) {
+                    if (edgeImg.at<uchar>(y, x) > 0) {
+                        edgePoints.push_back(cv::Point(x, y));
+                    }
+                }
+            }
+        }
+        
+        if (edgePoints.size() >= 6) {
+            cv::RotatedRect refined = cv::fitEllipse(edgePoints);
+            double dx = refined.center.x - ellipse.center.x;
+            double dy = refined.center.y - ellipse.center.y;
+            
+            if (std::sqrt(dx * dx + dy * dy) < 10) {
+                ellipse = refined;
+            }
+        }
+    }
 }
 
 void nonMaximumSuppression(std::vector<cv::RotatedRect>& ellipses, 
@@ -141,4 +293,92 @@ void FLED::EnhancedPostProcessingWithVisibility(const cv::Mat &edgeImg,
     } else {
         nonMaximumSuppression(detEllipses, detEllipseScore, iouThreshold);
     }
+}
+
+void FLED::AdvancedEllipseRefinement(const cv::Mat& edgeImg, bool refineFit, bool enableClustering) {
+    if (detEllipses.empty()) return;
+    
+    if (!edgeImg.empty() && refineFit) {
+        refineEllipseFit(detEllipses, edgeImg);
+    }
+    
+    if (enableClustering) {
+        clusterEllipsesByCenter(detEllipses, detEllipseScore, 25.0);
+    }
+}
+
+void FLED::MultiStageFiltering(const cv::Mat& edgeImg, 
+                               double initialConfidence,
+                               double finalConfidence,
+                               double clusterDistance) {
+    if (detEllipses.empty()) return;
+    
+    std::vector<cv::RotatedRect> filtered;
+    std::vector<double> filteredScores;
+    
+    for (size_t i = 0; i < detEllipses.size(); ++i) {
+        if (!isValidEllipse(detEllipses[i], _min_ellipse_size, 2000.0)) {
+            continue;
+        }
+        
+        double shapeScore = calculateShapeConsistency(detEllipses[i]);
+        double combinedScore = detEllipseScore[i] * 0.7 + shapeScore * 0.3;
+        
+        if (combinedScore >= initialConfidence) {
+            filtered.push_back(detEllipses[i]);
+            filteredScores.push_back(combinedScore);
+        }
+    }
+    
+    detEllipses.swap(filtered);
+    detEllipseScore.swap(filteredScores);
+    
+    if (!edgeImg.empty()) {
+        adaptiveThresholdFilter(detEllipses, detEllipseScore, edgeImg);
+    }
+    
+    clusterEllipsesByCenter(detEllipses, detEllipseScore, clusterDistance);
+    
+    std::vector<cv::RotatedRect> finalFiltered;
+    std::vector<double> finalScores;
+    
+    for (size_t i = 0; i < detEllipses.size(); ++i) {
+        if (detEllipseScore[i] >= finalConfidence) {
+            finalFiltered.push_back(detEllipses[i]);
+            finalScores.push_back(detEllipseScore[i]);
+        }
+    }
+    
+    detEllipses.swap(finalFiltered);
+    detEllipseScore.swap(finalScores);
+}
+
+void FLED::AdaptiveThresholdEnhancement(const cv::Mat& edgeImg) {
+    if (detEllipses.empty() || edgeImg.empty()) return;
+    
+    std::vector<double> continuityScores;
+    double maxContinuity = 0.0;
+    
+    for (const auto& ellipse : detEllipses) {
+        double cont = calculateEdgeContinuity(edgeImg, ellipse);
+        continuityScores.push_back(cont);
+        maxContinuity = std::max(maxContinuity, cont);
+    }
+    
+    double threshold = maxContinuity * 0.4;
+    
+    std::vector<cv::RotatedRect> filtered;
+    std::vector<double> filteredScores;
+    
+    for (size_t i = 0; i < detEllipses.size(); ++i) {
+        double combinedScore = detEllipseScore[i] * 0.5 + continuityScores[i] * 0.5;
+        
+        if (continuityScores[i] >= threshold && combinedScore > 0.25) {
+            filtered.push_back(detEllipses[i]);
+            filteredScores.push_back(combinedScore);
+        }
+    }
+    
+    detEllipses.swap(filtered);
+    detEllipseScore.swap(filteredScores);
 }

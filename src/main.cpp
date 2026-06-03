@@ -114,7 +114,9 @@ int main(int argc, char **argv)
 	
 	cv::Mat edgeImg;
     cv::Canny(imgGray, edgeImg, 50, 150);
-	aamed.EnhancedPostProcessingWithVisibility(edgeImg, 0.62, 0.45, 0.04);
+	
+	aamed.EnhancedPostProcessing(0.55, 0.45);
+	aamed.AdvancedEllipseRefinement(edgeImg, true, false);
 
 	cv::Vec<double, 10> detailTime = cv::Vec<double, 10>::all(0);
 	aamed.showDetailBreakdown(detailTime, options.quiet ? 0 : 1);

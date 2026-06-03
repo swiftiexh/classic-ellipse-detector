@@ -61,6 +61,10 @@ public:
 	void EnhancedPostProcessing(double confidenceThreshold = 0.8, double iouThreshold = 0.5);
 	void EnhancedPostProcessingWithVisibility(const cv::Mat &edgeImg, 
 		double confidenceThreshold = 0.8, double iouThreshold = 0.5, double minCoverage = 0.1);
+	void AdvancedEllipseRefinement(const cv::Mat& edgeImg, bool refineFit = true, bool enableClustering = true);
+	void MultiStageFiltering(const cv::Mat& edgeImg, 
+		double initialConfidence = 0.5, double finalConfidence = 0.6, double clusterDistance = 20.0);
+	void AdaptiveThresholdEnhancement(const cv::Mat& edgeImg);
 public:// Draw Data and Write Information Functions
 	void drawEdgeContours();
 	void drawDPContours();
