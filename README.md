@@ -1,75 +1,140 @@
 # AAMED_OpenCV
 
-`AAMED_OpenCV` 是从原始 AAMED 仓库中提取的、**仅依赖 OpenCV** 的 C++ 椭圆检测基准工程。
+`AAMED_OpenCV` 是一个基于 OpenCV 的纯 C++ 椭圆检测工程，改写自公开的 AAMED（Arc Adjacency Matrix-Based Fast Ellipse Detection）仓库。
 
-## 功能模块
+当前仓库主要提供：
 
-- **`aamed_demo`**：单张图像椭圆检测，输出检测结果、可视化图、耗时信息与中间调试图。
-- **`aamed_eval`**：基于椭圆重叠率（IoU）评估检测结果与真值（Ground Truth）的精度，输出 Precision / Recall / F-Measure。
+- `aamed_demo`：单图或数据集批量检测
+- `aamed_eval`：检测结果评测
+- 调试导出：边缘轮廓、DP 轮廓、FSA 弧段、邻接矩阵、最终椭圆结果
 
-## 编译构建（CMake）
+## 当前构建方式
 
-1. **配置（根据自己的 OpenCV 路径修改）**
+环境要求：
 
-   ```powershell
-   cmake -S . -B build -G "MinGW Makefiles" -DOpenCV_DIR="D:/OpenCV/opencv-4.5.2/build"
-   ```
+- OpenCV 4.x
+- CMake 3.20+
+- 支持 C++17 的编译器
 
-2. **编译**
-
-   ```powershell
-   cmake --build build
-   ```
-
-   编译完成后，可执行文件将生成在：
-
-   ```txt
-   build/bin/aamed_demo.exe
-   build/bin/aamed_eval.exe
-   ```
-
-## 运行检测
-
-1. **配置环境变量（根据自己的路径修改）**：
-
-   ```txt
-   D:\mingw64\bin
-   D:\OpenCV\opencv-4.5.2\build\install\x64\mingw\bin
-   ```
-
-2. **直接运行（默认图片 + 输出调试中间结果）**
-
-   ```powershell
-   .\build\bin\aamed_demo.exe --export-debug
-   ```
-
-   输出文件：
-
-   - `output/detected.png` 检测结果可视化
-   - `output/002_0038.jpg.fled.txt` 椭圆参数
-   - `output/detections.txt` 检测表格
-   - `output/timing.txt` 各阶段耗时
-   - `output/debug/*` 算法中间过程图（边缘、弧段、分组、拟合等）
-
-## 运行评估（aamed_eval）
-
-直接运行：
+Windows + MinGW 示例：
 
 ```powershell
-.\build\bin\aamed_eval.exe `
---dataset-root D:\CVProject\AAMED_OpenCV\data `
---results-dir D:\CVProject\AAMED_OpenCV\output `
---gt-format plain_rad `
---result-format aamed_fled `
---overlap 0.8 `
---report eval_result.txt
+cmake -S . -B build -G "MinGW Makefiles" -DOpenCV_DIR="D:/OpenCV/opencv-4.5.2/build"
+cmake --build build
 ```
 
-核心参数说明：
+生成的可执行文件：
 
-- `--dataset-root` ：数据集根目录，**自动读取**：`<dataset-root>/imagenames.txt`、`<dataset-root>/gt`
-- `--results-dir` 检测结果文件夹（`output`）
-- `--gt-format plain_rad` 真值格式：标准弧度制椭圆参数
-- `--result-format aamed_fled` 检测结果格式：本项目输出的 `.fled.txt`
-- `--overlap 0.8` 重叠率阈值（默认 0.8）
-- `--report eval_result.txt` 将评估报告保存到文件
+```txt
+build/bin/aamed_demo.exe
+build/bin/aamed_eval.exe
+```
+
+## 目录结构
+
+```txt
+demo/                 单图演示输入
+dataset/              数据集、GT 与参考结果
+dataset/images/       数据集图像
+dataset/gt/           Ground Truth
+dataset/AAMED/        参考 AAMED 结果文件
+output/single/        当前单图输出
+output/dataset/       当前批量输出
+src/                  检测器源码
+tools/aamed_eval.cpp  评测器源码
+```
+
+## 检测程序使用方式
+
+`aamed_demo` 现在不是通过命令行参数配置，而是直接在代码里改配置。
+
+入口文件：
+
+- [`src/main.cpp`](src/main.cpp)
+
+当前默认模式：
+
+- `RunMode::SingleImage`
+
+当前默认单图输入：
+
+- `demo/002_0038.jpg`
+
+当前默认单图输出目录：
+
+- `output/single/`
+
+如果要切换到数据集批量模式，可以修改 `src/main.cpp` 中的：
+
+```cpp
+RunMode mode = RunMode::DatasetBatch;
+```
+
+批量模式默认读取：
+
+- `dataset/images/`
+- `dataset/imagenames.txt`
+
+批量模式默认输出到：
+
+- `output/dataset/`
+
+运行方式：
+
+```powershell
+.\build\bin\aamed_demo.exe
+```
+
+## 评测程序使用方式
+
+`aamed_eval` 同样改成了代码内配置，不再通过命令行参数传入。
+
+入口文件：
+
+- [`tools/aamed_eval.cpp`](tools/aamed_eval.cpp)
+
+当前默认评测配置对应的是 `Synthetic Occluded` 数据集，主要包括：
+
+- `datasetRoot = dataset/`
+- `imagesDir = dataset/images/`
+- `gtDir = dataset/gt/`
+- `resultsDir = output/dataset/`
+- `groundTruthSource = PlainTextWithCount`
+- `groundTruthConvention = SyntheticOccludedDeg`
+- `resultFormat = AamedFled`
+- `overlapThreshold = 0.95`
+
+运行方式：
+
+```powershell
+.\build\bin\aamed_eval.exe
+```
+
+## 当前算法默认配置
+
+一些重要的编译期开关在 [`src/definition.h`](src/definition.h) 中：
+
+- `ADAPT_APPROX_CONTOURS = 1`
+- `DEFINITE_ERROR_BOUNDED = 1`
+- `FASTER_ELLIPSE_VALIDATION = 1`
+- `SELECT_CLUSTER_METHOD = OUR_CLUSTER_METHOD`
+
+## 输出内容
+
+单图模式可能生成：
+
+- `detected.png`
+- `timing.txt`
+- `detections.txt`
+- `*.fled.txt`
+- `debug/` 中间调试结果
+
+批量模式会生成：
+
+- 每张图对应一个 `*.fled.txt`
+- `batch_summary.txt`
+
+## 说明
+
+- 当前仓库为了方便课程项目实验，检测器和评测器都采用“源码内改配置”的方式。
+- `dataset/AAMED/` 可作为参考结果目录，用来验证评测器是否正确读取 `.fled.txt`。

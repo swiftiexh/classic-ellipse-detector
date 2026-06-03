@@ -1,5 +1,9 @@
 #include "FLED.h"
 
+#if FASTER_ELLIPSE_VALIDATION
+#include <immintrin.h>
+#endif
+
 
 // When compiling AAMED with GCC under Linux, 
 // some functions (cos, sin, tan, etc.) will generate some bugs, 
@@ -346,8 +350,8 @@ bool FLED::fastValidation(cv::RotatedRect &res, double *detScore)
 	
 	for (int i = 0; i < VALIDATION_NUMBER; i += sizeof(__m256)/sizeof(float))
 	{
-		__m256 base_x = _mm256_load_ps(vldBaseDataX + i);
-		__m256 base_y = _mm256_load_ps(vldBaseDataY + i);
+		__m256 base_x = _mm256_loadu_ps(vldBaseDataX + i);
+		__m256 base_y = _mm256_loadu_ps(vldBaseDataY + i);
 		// calculate location x
 		tmp_x = _mm256_add_ps(
 			_mm256_mul_ps(_rot_trans_0, base_x),
@@ -598,8 +602,8 @@ bool FLED::fastValidation(cv::RotatedRect &res, double *detScore)
 
 	for (int i = 0; i < VALIDATION_NUMBER; i += sizeof(__m256) / sizeof(float))
 	{
-		__m256 base_x = _mm256_load_ps(vldBaseDataX + i);
-		__m256 base_y = _mm256_load_ps(vldBaseDataY + i);
+		__m256 base_x = _mm256_loadu_ps(vldBaseDataX + i);
+		__m256 base_y = _mm256_loadu_ps(vldBaseDataY + i);
 		// calculate location x
 		tmp_x = _mm256_add_ps(
 			_mm256_mul_ps(_rot_trans_0, base_x),

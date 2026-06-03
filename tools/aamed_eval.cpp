@@ -1,11 +1,15 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -22,7 +26,7 @@ struct EllipseParam
 	double a = 0.0;
 	double b = 0.0;
 	double thetaRad = 0.0;
-	double score = 0.0;
+	double score = 1.0;
 };
 
 struct DetectionFile
@@ -31,13 +35,27 @@ struct DetectionFile
 	std::vector<EllipseParam> ellipses;
 };
 
-enum class GroundTruthFormat
+enum class GroundTruthSource
 {
-	PlainRad,
-	PlainDeg,
-	RandomGt,
-	PrasadGt,
-	ConcentricGt
+	PlainTextWithCount,
+	MatlabMatrix
+};
+
+enum class EllipseConvention
+{
+	XYRad,
+	XYDeg,
+	RowColRad,
+	RowColDeg,
+	ConcentricDeg,
+	SyntheticOccludedDeg
+};
+
+enum class MatrixOrientation
+{
+	Auto,
+	RowsAreEllipses,
+	ColsAreEllipses
 };
 
 enum class ResultFormat
@@ -47,169 +65,29 @@ enum class ResultFormat
 	PlainDeg
 };
 
-struct EvalOptions
+struct EvalConfig
 {
-	std::optional<fs::path> datasetRoot;
-	std::optional<fs::path> imageNamesPath;
-	std::optional<fs::path> gtDir;
-	std::optional<fs::path> resultsDir;
-	std::optional<fs::path> reportPath;
-	GroundTruthFormat gtFormat = GroundTruthFormat::PlainRad;
+	fs::path datasetRoot = fs::path(AAMED_OPENCV_PROJECT_ROOT) / "dataset";
+	fs::path imagesDir = datasetRoot / "images";
+	fs::path imageNamesPath = datasetRoot / "imagenames.txt";
+	fs::path gtDir = datasetRoot / "gt";
+	fs::path resultsDir = fs::path(AAMED_OPENCV_PROJECT_ROOT) / "output" / "dataset";
+	fs::path reportPath = resultsDir / "eval_report.txt";
+
+	GroundTruthSource groundTruthSource = GroundTruthSource::PlainTextWithCount;
+	EllipseConvention groundTruthConvention = EllipseConvention::SyntheticOccludedDeg;
+	MatrixOrientation gtMatrixOrientation = MatrixOrientation::Auto;
 	ResultFormat resultFormat = ResultFormat::AamedFled;
+
 	std::string gtPrefix;
 	std::string gtSuffix = ".txt";
 	std::string resultSuffix = ".fled.txt";
-	double overlapThreshold = 0.8;
+	double overlapThreshold = 0.95;
 };
 
-void printUsage()
+EvalConfig buildConfig()
 {
-	std::cout
-		<< "Usage: aamed_eval --results-dir <dir> [--dataset-root <dir> | --imagenames <file> --gt-dir <dir>]\n"
-		<< "                  [--gt-format plain_rad|plain_deg|random|prasad|concentric]\n"
-		<< "                  [--result-format aamed_fled|plain_rad|plain_deg]\n"
-		<< "                  [--gt-prefix <prefix>] [--gt-suffix <suffix>] [--result-suffix <suffix>]\n"
-		<< "                  [--overlap <threshold>] [--report <file>]\n";
-}
-
-bool parseGtFormat(const std::string &value, GroundTruthFormat &format)
-{
-	if (value == "plain_rad")
-	{
-		format = GroundTruthFormat::PlainRad;
-	}
-	else if (value == "plain_deg")
-	{
-		format = GroundTruthFormat::PlainDeg;
-	}
-	else if (value == "random")
-	{
-		format = GroundTruthFormat::RandomGt;
-	}
-	else if (value == "prasad")
-	{
-		format = GroundTruthFormat::PrasadGt;
-	}
-	else if (value == "concentric")
-	{
-		format = GroundTruthFormat::ConcentricGt;
-	}
-	else
-	{
-		return false;
-	}
-	return true;
-}
-
-bool parseResultFormat(const std::string &value, ResultFormat &format)
-{
-	if (value == "aamed_fled")
-	{
-		format = ResultFormat::AamedFled;
-	}
-	else if (value == "plain_rad")
-	{
-		format = ResultFormat::PlainRad;
-	}
-	else if (value == "plain_deg")
-	{
-		format = ResultFormat::PlainDeg;
-	}
-	else
-	{
-		return false;
-	}
-	return true;
-}
-
-bool parseArgs(int argc, char **argv, EvalOptions &options)
-{
-	for (int idx = 1; idx < argc; ++idx)
-	{
-		const std::string arg = argv[idx];
-		if (arg == "--dataset-root" && idx + 1 < argc)
-		{
-			options.datasetRoot = fs::path(argv[++idx]);
-		}
-		else if (arg == "--imagenames" && idx + 1 < argc)
-		{
-			options.imageNamesPath = fs::path(argv[++idx]);
-		}
-		else if (arg == "--gt-dir" && idx + 1 < argc)
-		{
-			options.gtDir = fs::path(argv[++idx]);
-		}
-		else if (arg == "--results-dir" && idx + 1 < argc)
-		{
-			options.resultsDir = fs::path(argv[++idx]);
-		}
-		else if (arg == "--report" && idx + 1 < argc)
-		{
-			options.reportPath = fs::path(argv[++idx]);
-		}
-		else if (arg == "--gt-format" && idx + 1 < argc)
-		{
-			if (!parseGtFormat(argv[++idx], options.gtFormat))
-			{
-				std::cerr << "Unknown gt format.\n";
-				return false;
-			}
-		}
-		else if (arg == "--result-format" && idx + 1 < argc)
-		{
-			if (!parseResultFormat(argv[++idx], options.resultFormat))
-			{
-				std::cerr << "Unknown result format.\n";
-				return false;
-			}
-		}
-		else if (arg == "--gt-prefix" && idx + 1 < argc)
-		{
-			options.gtPrefix = argv[++idx];
-		}
-		else if (arg == "--gt-suffix" && idx + 1 < argc)
-		{
-			options.gtSuffix = argv[++idx];
-		}
-		else if (arg == "--result-suffix" && idx + 1 < argc)
-		{
-			options.resultSuffix = argv[++idx];
-		}
-		else if (arg == "--overlap" && idx + 1 < argc)
-		{
-			options.overlapThreshold = std::stod(argv[++idx]);
-		}
-		else if (arg == "--help" || arg == "-h")
-		{
-			printUsage();
-			return false;
-		}
-		else
-		{
-			std::cerr << "Unknown argument: " << arg << '\n';
-			return false;
-		}
-	}
-
-	if (options.datasetRoot.has_value())
-	{
-		if (!options.imageNamesPath.has_value())
-		{
-			options.imageNamesPath = options.datasetRoot.value() / "imagenames.txt";
-		}
-		if (!options.gtDir.has_value())
-		{
-			options.gtDir = options.datasetRoot.value() / "gt";
-		}
-	}
-
-	if (!options.imageNamesPath.has_value() || !options.gtDir.has_value() || !options.resultsDir.has_value())
-	{
-		printUsage();
-		return false;
-	}
-
-	return true;
+	return EvalConfig{};
 }
 
 std::vector<std::string> readImageNames(const fs::path &path)
@@ -217,7 +95,7 @@ std::vector<std::string> readImageNames(const fs::path &path)
 	std::ifstream in(path);
 	if (!in)
 	{
-		throw std::runtime_error("Failed to open imagenames file: " + path.string());
+		throw std::runtime_error("Failed to open image list: " + path.string());
 	}
 
 	std::vector<std::string> names;
@@ -232,6 +110,62 @@ std::vector<std::string> readImageNames(const fs::path &path)
 	return names;
 }
 
+fs::path resolveImagePath(const fs::path &imagesDir, const std::string &imageName)
+{
+	const fs::path directPath = imagesDir / imageName;
+	if (fs::exists(directPath))
+	{
+		return directPath;
+	}
+
+	const fs::path namePath(imageName);
+	if (namePath.has_extension())
+	{
+		return directPath;
+	}
+
+	static const char *kExtensions[] = {".jpg", ".png", ".bmp", ".jpeg", ".tif", ".tiff"};
+	for (const char *extension : kExtensions)
+	{
+		const fs::path candidate = imagesDir / (imageName + extension);
+		if (fs::exists(candidate))
+		{
+			return candidate;
+		}
+	}
+	return directPath;
+}
+
+fs::path resolveGroundTruthPath(const EvalConfig &config, const fs::path &resolvedImagePath, const std::string &imageName)
+{
+	const std::array<std::string, 2> bases = {
+		resolvedImagePath.filename().string(),
+		resolvedImagePath.stem().string()
+	};
+
+	for (const std::string &base : bases)
+	{
+		const fs::path candidate = config.gtDir / (config.gtPrefix + base + config.gtSuffix);
+		if (fs::exists(candidate))
+		{
+			return candidate;
+		}
+	}
+
+	return config.gtDir / (config.gtPrefix + imageName + config.gtSuffix);
+}
+
+fs::path resolveResultPath(const EvalConfig &config, const fs::path &resolvedImagePath, const std::string &imageName)
+{
+	const fs::path byResolvedName = config.resultsDir / (resolvedImagePath.filename().string() + config.resultSuffix);
+	if (fs::exists(byResolvedName))
+	{
+		return byResolvedName;
+	}
+
+	return config.resultsDir / (imageName + config.resultSuffix);
+}
+
 std::vector<double> parseNumbers(const std::string &line)
 {
 	std::istringstream in(line);
@@ -244,31 +178,34 @@ std::vector<double> parseNumbers(const std::string &line)
 	return values;
 }
 
-EllipseParam convertGroundTruthRecord(const std::vector<double> &raw, GroundTruthFormat format)
+EllipseParam convertRawEllipseRecord(const std::vector<double> &raw, EllipseConvention convention)
 {
 	EllipseParam ellipse;
-	switch (format)
+	switch (convention)
 	{
-	case GroundTruthFormat::PlainRad:
+	case EllipseConvention::XYRad:
 		ellipse = {raw[0], raw[1], raw[2], raw[3], raw[4], 1.0};
 		break;
-	case GroundTruthFormat::PlainDeg:
+	case EllipseConvention::XYDeg:
 		ellipse = {raw[0], raw[1], raw[2], raw[3], raw[4] / 180.0 * kPi, 1.0};
 		break;
-	case GroundTruthFormat::RandomGt:
-		ellipse = {raw[0] + 1.0, raw[1] + 1.0, raw[2], raw[3], raw[4] / 180.0 * kPi, 1.0};
+	case EllipseConvention::RowColRad:
+		ellipse = {raw[1], raw[0], raw[2], raw[3], raw[4], 1.0};
 		break;
-	case GroundTruthFormat::PrasadGt:
-		ellipse = {raw[0], raw[1], raw[2], raw[3], raw[4], 1.0};
+	case EllipseConvention::RowColDeg:
+		ellipse = {raw[1], raw[0], raw[2], raw[3], raw[4] / 180.0 * kPi, 1.0};
 		break;
-	case GroundTruthFormat::ConcentricGt:
+	case EllipseConvention::ConcentricDeg:
 		ellipse = {raw[1], raw[0], raw[3], raw[2], -raw[4] / 180.0 * kPi, 1.0};
+		break;
+	case EllipseConvention::SyntheticOccludedDeg:
+		ellipse = {raw[1], raw[0], raw[3], raw[2], kPi / 2.0 - raw[4] / 180.0 * kPi, 1.0};
 		break;
 	}
 	return ellipse;
 }
 
-std::vector<EllipseParam> readGroundTruthFile(const fs::path &path, GroundTruthFormat format)
+std::vector<EllipseParam> readPlainTextGroundTruthFile(const fs::path &path, EllipseConvention convention)
 {
 	std::ifstream in(path);
 	if (!in)
@@ -288,13 +225,375 @@ std::vector<EllipseParam> readGroundTruthFile(const fs::path &path, GroundTruthF
 	for (int idx = 0; idx < count && std::getline(in, line); ++idx)
 	{
 		const auto values = parseNumbers(line);
-		if (values.size() < 5)
+		if (values.size() >= 5)
 		{
-			continue;
+			ellipses.push_back(convertRawEllipseRecord(values, convention));
 		}
-		ellipses.push_back(convertGroundTruthRecord(values, format));
 	}
 	return ellipses;
+}
+
+std::vector<std::uint8_t> readBinaryFile(const fs::path &path)
+{
+	std::ifstream in(path, std::ios::binary);
+	if (!in)
+	{
+		throw std::runtime_error("Failed to open binary file: " + path.string());
+	}
+
+	in.seekg(0, std::ios::end);
+	const std::streamsize size = in.tellg();
+	in.seekg(0, std::ios::beg);
+
+	if (size <= 0)
+	{
+		return {};
+	}
+
+	std::vector<std::uint8_t> bytes(static_cast<size_t>(size));
+	in.read(reinterpret_cast<char *>(bytes.data()), size);
+	return bytes;
+}
+
+struct DataElement
+{
+	std::uint32_t type = 0;
+	std::uint32_t bytes = 0;
+	size_t payloadOffset = 0;
+	size_t nextOffset = 0;
+};
+
+size_t align8(size_t value)
+{
+	return (value + 7u) & ~size_t(7u);
+}
+
+std::uint16_t readU16LE(const std::vector<std::uint8_t> &bytes, size_t offset)
+{
+	return static_cast<std::uint16_t>(bytes[offset])
+		| (static_cast<std::uint16_t>(bytes[offset + 1]) << 8);
+}
+
+std::uint32_t readU32LE(const std::vector<std::uint8_t> &bytes, size_t offset)
+{
+	return static_cast<std::uint32_t>(bytes[offset])
+		| (static_cast<std::uint32_t>(bytes[offset + 1]) << 8)
+		| (static_cast<std::uint32_t>(bytes[offset + 2]) << 16)
+		| (static_cast<std::uint32_t>(bytes[offset + 3]) << 24);
+}
+
+std::int32_t readI32LE(const std::vector<std::uint8_t> &bytes, size_t offset)
+{
+	return static_cast<std::int32_t>(readU32LE(bytes, offset));
+}
+
+std::uint64_t readU64LE(const std::vector<std::uint8_t> &bytes, size_t offset)
+{
+	return static_cast<std::uint64_t>(readU32LE(bytes, offset))
+		| (static_cast<std::uint64_t>(readU32LE(bytes, offset + 4)) << 32);
+}
+
+double readF64LE(const std::vector<std::uint8_t> &bytes, size_t offset)
+{
+	double value = 0.0;
+	std::uint64_t raw = readU64LE(bytes, offset);
+	std::memcpy(&value, &raw, sizeof(double));
+	return value;
+}
+
+float readF32LE(const std::vector<std::uint8_t> &bytes, size_t offset)
+{
+	float value = 0.0f;
+	std::uint32_t raw = readU32LE(bytes, offset);
+	std::memcpy(&value, &raw, sizeof(float));
+	return value;
+}
+
+bool readDataElement(const std::vector<std::uint8_t> &bytes, size_t offset, DataElement &element)
+{
+	if (offset + 8 > bytes.size())
+	{
+		return false;
+	}
+
+	const std::uint16_t packedBytes = readU16LE(bytes, offset + 2);
+	if (packedBytes != 0)
+	{
+		element.type = readU16LE(bytes, offset);
+		element.bytes = packedBytes;
+		element.payloadOffset = offset + 4;
+		element.nextOffset = offset + 8;
+		return element.payloadOffset + element.bytes <= bytes.size();
+	}
+
+	element.type = readU32LE(bytes, offset);
+	element.bytes = readU32LE(bytes, offset + 4);
+	element.payloadOffset = offset + 8;
+	element.nextOffset = align8(element.payloadOffset + element.bytes);
+	return element.payloadOffset + element.bytes <= bytes.size() && element.nextOffset <= bytes.size();
+}
+
+struct NumericMatrix
+{
+	size_t rows = 0;
+	size_t cols = 0;
+	std::vector<double> values;
+
+	double at(size_t row, size_t col) const
+	{
+		return values[col * rows + row];
+	}
+};
+
+double readNumericValue(const std::vector<std::uint8_t> &bytes, std::uint32_t type, size_t offset)
+{
+	switch (type)
+	{
+	case 1:
+		return static_cast<double>(static_cast<std::int8_t>(bytes[offset]));
+	case 2:
+		return static_cast<double>(bytes[offset]);
+	case 3:
+		return static_cast<double>(static_cast<std::int16_t>(readU16LE(bytes, offset)));
+	case 4:
+		return static_cast<double>(readU16LE(bytes, offset));
+	case 5:
+		return static_cast<double>(readI32LE(bytes, offset));
+	case 6:
+		return static_cast<double>(readU32LE(bytes, offset));
+	case 7:
+		return static_cast<double>(readF32LE(bytes, offset));
+	case 9:
+		return readF64LE(bytes, offset);
+	case 12:
+		return static_cast<double>(static_cast<std::int64_t>(readU64LE(bytes, offset)));
+	case 13:
+		return static_cast<double>(readU64LE(bytes, offset));
+	default:
+		throw std::runtime_error("Unsupported MATLAB numeric type: " + std::to_string(type));
+	}
+}
+
+size_t matlabTypeSize(std::uint32_t type)
+{
+	switch (type)
+	{
+	case 1:
+	case 2:
+		return 1;
+	case 3:
+	case 4:
+		return 2;
+	case 5:
+	case 6:
+	case 7:
+		return 4;
+	case 9:
+	case 12:
+	case 13:
+		return 8;
+	default:
+		throw std::runtime_error("Unsupported MATLAB numeric type size: " + std::to_string(type));
+	}
+}
+
+std::optional<NumericMatrix> extractFirstMatlabMatrix(const std::vector<std::uint8_t> &bytes)
+{
+	if (bytes.size() < 128)
+	{
+		return std::nullopt;
+	}
+
+	const std::string header(reinterpret_cast<const char *>(bytes.data()),
+		reinterpret_cast<const char *>(bytes.data()) + std::min<size_t>(116, bytes.size()));
+	if (header.rfind("MATLAB 5.0 MAT-file", 0) != 0)
+	{
+		throw std::runtime_error("Unsupported MAT header. Only MATLAB 5 MAT files are supported.");
+	}
+
+	if (bytes[126] != 'I' || bytes[127] != 'M')
+	{
+		throw std::runtime_error("Unsupported MAT endianness. Only little-endian files are supported.");
+	}
+
+	size_t offset = 128;
+	while (offset + 8 <= bytes.size())
+	{
+		DataElement element;
+		if (!readDataElement(bytes, offset, element))
+		{
+			break;
+		}
+
+		if (element.type == 15)
+		{
+			throw std::runtime_error("Compressed MAT files are not supported by this evaluator.");
+		}
+
+		if (element.type == 14)
+		{
+			size_t innerOffset = element.payloadOffset;
+			size_t rows = 0;
+			size_t cols = 0;
+			bool isComplex = false;
+			std::uint32_t realType = 0;
+			size_t realOffset = 0;
+			size_t realBytes = 0;
+
+			while (innerOffset + 8 <= element.payloadOffset + element.bytes)
+			{
+				DataElement subElement;
+				if (!readDataElement(bytes, innerOffset, subElement))
+				{
+					break;
+				}
+
+				if (subElement.type == 6 && subElement.bytes >= 8)
+				{
+					const std::uint32_t flags = readU32LE(bytes, subElement.payloadOffset);
+					isComplex = (flags & 0x0800u) != 0;
+				}
+				else if (subElement.type == 5 && subElement.bytes >= 8)
+				{
+					rows = static_cast<size_t>(readI32LE(bytes, subElement.payloadOffset));
+					cols = static_cast<size_t>(readI32LE(bytes, subElement.payloadOffset + 4));
+				}
+				else if (subElement.type != 1 && subElement.type != 2)
+				{
+					realType = subElement.type;
+					realOffset = subElement.payloadOffset;
+					realBytes = subElement.bytes;
+					break;
+				}
+
+				innerOffset = subElement.nextOffset;
+			}
+
+			if (!isComplex && rows > 0 && cols > 0 && realType != 0)
+			{
+				const size_t count = rows * cols;
+				const size_t valueSize = matlabTypeSize(realType);
+				if (count * valueSize > realBytes)
+				{
+					throw std::runtime_error("MAT matrix payload is smaller than expected.");
+				}
+
+				NumericMatrix matrix;
+				matrix.rows = rows;
+				matrix.cols = cols;
+				matrix.values.resize(count);
+				for (size_t idx = 0; idx < count; ++idx)
+				{
+					matrix.values[idx] = readNumericValue(bytes, realType, realOffset + idx * valueSize);
+				}
+				return matrix;
+			}
+		}
+
+		offset = element.nextOffset;
+	}
+
+	return std::nullopt;
+}
+
+std::vector<EllipseParam> convertMatrixToEllipses(
+	const NumericMatrix &matrix,
+	EllipseConvention convention,
+	MatrixOrientation orientation)
+{
+	std::vector<EllipseParam> ellipses;
+	bool rowsAreEllipses = true;
+
+	if (orientation == MatrixOrientation::RowsAreEllipses)
+	{
+		rowsAreEllipses = true;
+	}
+	else if (orientation == MatrixOrientation::ColsAreEllipses)
+	{
+		rowsAreEllipses = false;
+	}
+	else if (matrix.cols == 5)
+	{
+		rowsAreEllipses = true;
+	}
+	else if (matrix.rows == 5)
+	{
+		rowsAreEllipses = false;
+	}
+	else if (matrix.cols >= 5)
+	{
+		rowsAreEllipses = true;
+	}
+	else if (matrix.rows >= 5)
+	{
+		rowsAreEllipses = false;
+	}
+	else
+	{
+		throw std::runtime_error("MAT ground-truth matrix does not contain enough columns for ellipse parameters.");
+	}
+
+	if (rowsAreEllipses)
+	{
+		for (size_t row = 0; row < matrix.rows; ++row)
+		{
+			if (matrix.cols < 5)
+			{
+				break;
+			}
+			const std::vector<double> raw = {
+				matrix.at(row, 0),
+				matrix.at(row, 1),
+				matrix.at(row, 2),
+				matrix.at(row, 3),
+				matrix.at(row, 4)
+			};
+			ellipses.push_back(convertRawEllipseRecord(raw, convention));
+		}
+	}
+	else
+	{
+		for (size_t col = 0; col < matrix.cols; ++col)
+		{
+			if (matrix.rows < 5)
+			{
+				break;
+			}
+			const std::vector<double> raw = {
+				matrix.at(0, col),
+				matrix.at(1, col),
+				matrix.at(2, col),
+				matrix.at(3, col),
+				matrix.at(4, col)
+			};
+			ellipses.push_back(convertRawEllipseRecord(raw, convention));
+		}
+	}
+
+	return ellipses;
+}
+
+std::vector<EllipseParam> readMatlabGroundTruthFile(
+	const fs::path &path,
+	EllipseConvention convention,
+	MatrixOrientation orientation)
+{
+	const std::vector<std::uint8_t> bytes = readBinaryFile(path);
+	const std::optional<NumericMatrix> matrix = extractFirstMatlabMatrix(bytes);
+	if (!matrix.has_value())
+	{
+		throw std::runtime_error("No numeric matrix was found in ground-truth MAT file: " + path.string());
+	}
+	return convertMatrixToEllipses(matrix.value(), convention, orientation);
+}
+
+std::vector<EllipseParam> readGroundTruthFile(const fs::path &path, const EvalConfig &config)
+{
+	if (config.groundTruthSource == GroundTruthSource::PlainTextWithCount)
+	{
+		return readPlainTextGroundTruthFile(path, config.groundTruthConvention);
+	}
+	return readMatlabGroundTruthFile(path, config.groundTruthConvention, config.gtMatrixOrientation);
 }
 
 DetectionFile readDetectionFile(const fs::path &path, ResultFormat format)
@@ -340,6 +639,7 @@ DetectionFile readDetectionFile(const fs::path &path, ResultFormat format)
 		{
 			continue;
 		}
+
 		EllipseParam ellipse = {values[0], values[1], values[2], values[3], values[4], values.size() > 5 ? values[5] : 1.0};
 		if (format == ResultFormat::PlainDeg)
 		{
@@ -438,7 +738,10 @@ double ellipseOverlap(const EllipseParam &lhs, const EllipseParam &rhs)
 	double overlapArea = 0.0;
 	for (double y = yMin; y <= yMax + 1e-6; y += searchStep)
 	{
-		double x11 = 0.0, x12 = -1.0, x21 = 0.0, x22 = -1.0;
+		double x11 = 0.0;
+		double x12 = -1.0;
+		double x21 = 0.0;
+		double x22 = -1.0;
 		const bool lhsValid = calculateRangeAtY(lhsEq, y, &x11, &x12);
 		const bool rhsValid = calculateRangeAtY(rhsEq, y, &x21, &x22);
 		if (!lhsValid || !rhsValid)
@@ -467,29 +770,26 @@ std::string formatDouble(double value)
 }
 }
 
-int main(int argc, char **argv)
+int main()
 {
-	EvalOptions options;
-	if (!parseArgs(argc, argv, options))
-	{
-		return 1;
-	}
-
 	try
 	{
-		const std::vector<std::string> imageNames = readImageNames(options.imageNamesPath.value());
+		const EvalConfig config = buildConfig();
+		const std::vector<std::string> imageNames = readImageNames(config.imageNamesPath);
+
 		double posAll = 0.0;
 		double detAll = 0.0;
 		double gtAll = 0.0;
 		double timeSum = 0.0;
 
-		for (const auto &imageName : imageNames)
+		for (const std::string &imageName : imageNames)
 		{
-			const fs::path gtPath = options.gtDir.value() / (options.gtPrefix + imageName + options.gtSuffix);
-			const fs::path resultPath = options.resultsDir.value() / (imageName + options.resultSuffix);
+			const fs::path resolvedImagePath = resolveImagePath(config.imagesDir, imageName);
+			const fs::path gtPath = resolveGroundTruthPath(config, resolvedImagePath, imageName);
+			const fs::path resultPath = resolveResultPath(config, resolvedImagePath, imageName);
 
-			const std::vector<EllipseParam> gtEllipses = readGroundTruthFile(gtPath, options.gtFormat);
-			const DetectionFile detections = readDetectionFile(resultPath, options.resultFormat);
+			const std::vector<EllipseParam> gtEllipses = readGroundTruthFile(gtPath, config);
+			const DetectionFile detections = readDetectionFile(resultPath, config.resultFormat);
 			timeSum += detections.timeMs;
 
 			std::vector<int> gtMatch(gtEllipses.size(), 0);
@@ -498,7 +798,7 @@ int main(int argc, char **argv)
 			{
 				for (size_t gtIdx = 0; gtIdx < gtEllipses.size(); ++gtIdx)
 				{
-					if (ellipseOverlap(detections.ellipses[detIdx], gtEllipses[gtIdx]) > options.overlapThreshold)
+					if (ellipseOverlap(detections.ellipses[detIdx], gtEllipses[gtIdx]) > config.overlapThreshold)
 					{
 						detMatch[detIdx] += 1;
 						gtMatch[gtIdx] += 1;
@@ -534,11 +834,9 @@ int main(int argc, char **argv)
 
 		std::cout << report.str();
 
-		if (options.reportPath.has_value())
-		{
-			std::ofstream reportOut(options.reportPath.value());
-			reportOut << report.str();
-		}
+		fs::create_directories(config.reportPath.parent_path());
+		std::ofstream reportOut(config.reportPath);
+		reportOut << report.str();
 	}
 	catch (const std::exception &ex)
 	{
