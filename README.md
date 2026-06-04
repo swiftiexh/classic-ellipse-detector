@@ -54,21 +54,7 @@ tools/aamed_eval.cpp  评测器源码
 
 当前默认模式：
 
-- `RunMode::SingleImage`
-
-当前默认单图输入：
-
-- `demo/002_0038.jpg`
-
-当前默认单图输出目录：
-
-- `output/single/`
-
-如果要切换到数据集批量模式，可以修改 `src/main.cpp` 中的：
-
-```cpp
-RunMode mode = RunMode::DatasetBatch;
-```
+- `RunMode::DatasetBatch`
 
 批量模式默认读取：
 
@@ -93,16 +79,17 @@ RunMode mode = RunMode::DatasetBatch;
 
 - [`tools/aamed_eval.cpp`](tools/aamed_eval.cpp)
 
-当前默认评测配置对应的是 `Synthetic Occluded` 数据集，主要包括：
+当前默认评测配置对应的是 `Prasad` 数据集，主要包括：
 
 - `datasetRoot = dataset/`
 - `imagesDir = dataset/images/`
 - `gtDir = dataset/gt/`
 - `resultsDir = output/dataset/`
 - `groundTruthSource = PlainTextWithCount`
-- `groundTruthConvention = SyntheticOccludedDeg`
+- `groundTruthConvention = XYRad`
+- `gtPrefix = "gt_"`
 - `resultFormat = AamedFled`
-- `overlapThreshold = 0.95`
+- `overlapThreshold = 0.8`
 
 运行方式：
 
@@ -112,12 +99,14 @@ RunMode mode = RunMode::DatasetBatch;
 
 ## 当前算法默认配置
 
-一些重要的编译期开关在 [`src/definition.h`](src/definition.h) 中：
+一些重要的编译期开关在 [`src/definition.h`](src/definition.h) 中。
+
+当前工作区默认值：
 
 - `ADAPT_APPROX_CONTOURS = 1`
 - `DEFINITE_ERROR_BOUNDED = 1`
-- `FASTER_ELLIPSE_VALIDATION = 1`
-- `SELECT_CLUSTER_METHOD = OUR_CLUSTER_METHOD`
+- `FASTER_ELLIPSE_VALIDATION = 0`
+- `SELECT_CLUSTER_METHOD = PRASAD_CLUSTER_METHOD`
 
 ## 输出内容
 
@@ -138,3 +127,17 @@ RunMode mode = RunMode::DatasetBatch;
 
 - 当前仓库为了方便课程项目实验，检测器和评测器都采用“源码内改配置”的方式。
 - `dataset/AAMED/` 可作为参考结果目录，用来验证评测器是否正确读取 `.fled.txt`。
+
+## Prasad 结果
+
+论文中给出的 `Prasad` 数据集官方结果为：
+
+| 配置/来源 | Precision | Recall | FMeasure | Time (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| 论文官方结果 | 77.13 | 39.66 | 52.38 | 4.21 |
+
+在当前实现上的实测结果为：
+
+| 配置/来源 | Precision | Recall | FMeasure | Time (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| 推荐匹配配置 | 77.78 | 40.26 | 53.05 | 3.74 |

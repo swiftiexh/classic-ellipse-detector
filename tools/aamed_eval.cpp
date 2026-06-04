@@ -72,17 +72,17 @@ struct EvalConfig
 	fs::path imageNamesPath = datasetRoot / "imagenames.txt";
 	fs::path gtDir = datasetRoot / "gt";
 	fs::path resultsDir = fs::path(AAMED_OPENCV_PROJECT_ROOT) / "output" / "dataset";
-	fs::path reportPath = resultsDir / "eval_report.txt";
+	fs::path reportPath = resultsDir / "prasad_eval_report.txt";
 
 	GroundTruthSource groundTruthSource = GroundTruthSource::PlainTextWithCount;
-	EllipseConvention groundTruthConvention = EllipseConvention::SyntheticOccludedDeg;
+	EllipseConvention groundTruthConvention = EllipseConvention::XYRad;
 	MatrixOrientation gtMatrixOrientation = MatrixOrientation::Auto;
 	ResultFormat resultFormat = ResultFormat::AamedFled;
 
-	std::string gtPrefix;
+	std::string gtPrefix = "gt_";
 	std::string gtSuffix = ".txt";
 	std::string resultSuffix = ".fled.txt";
-	double overlapThreshold = 0.95;
+	double overlapThreshold = 0.8;
 };
 
 EvalConfig buildConfig()

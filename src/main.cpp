@@ -55,6 +55,7 @@ AppConfig buildConfig()
 	const fs::path projectRoot(AAMED_OPENCV_PROJECT_ROOT);
 
 	AppConfig config;
+	config.mode = RunMode::DatasetBatch;
 	config.single.inputPath = projectRoot / "demo" / "002_0038.jpg";
 	config.single.outputDir = projectRoot / "output" / "single";
 
