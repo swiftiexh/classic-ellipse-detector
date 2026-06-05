@@ -1,0 +1,51 @@
+{
+  "dataset": "Prasad",
+  "images": 198,
+  "total_gt": 1165,
+  "small_gt_lt15px": 454,
+  "iou_threshold": 0.8,
+  "baseline": {
+    "description": "AAMED 1x, T_val=0.77",
+    "precision": 0.779070,
+    "recall": 0.402575,
+    "fmeasure": 0.530843,
+    "detected_count": 602,
+    "small_recall_lt15px": 0.1278,
+    "matched_small": 58
+  },
+  "best_variant": {
+    "name": "cross_scale_strict",
+    "description": "Multi-scale (2x/3x, T=0.77/0.72) + strict consensus fusion (>=3 branches, cross-scale)",
+    "precision": 0.655215,
+    "recall": 0.458369,
+    "fmeasure": 0.539394,
+    "detected_count": 815,
+    "small_recall_lt15px": 0.2511,
+    "matched_small": 114,
+    "newly_recovered_small": 56,
+    "displaced_small": 0
+  },
+  "bootstrap_95ci": {
+    "fmeasure_delta": [-0.0109, 0.0286],
+    "recall_delta": [0.0385, 0.0751]
+  },
+  "oracle": {
+    "recall": 0.5116,
+    "matched": 596,
+    "total": 1165
+  },
+  "scale_branches": {
+    "scale2_t77": { "scale": 2, "t_val": 0.77 },
+    "scale2_t72": { "scale": 2, "t_val": 0.72 },
+    "scale3_t77": { "scale": 3, "t_val": 0.77 },
+    "scale3_t72": { "scale": 3, "t_val": 0.72 }
+  },
+  "fusion_config": {
+    "mode": "strict",
+    "iou_threshold": 0.8,
+    "min_branches": 3,
+    "requires_cross_scale": true,
+    "remap_radius_max": 20.0,
+    "upsample_interpolation": "INTER_CUBIC"
+  }
+}

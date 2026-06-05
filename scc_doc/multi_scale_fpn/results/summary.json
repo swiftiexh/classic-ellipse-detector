@@ -1,0 +1,217 @@
+{
+  "stage": 2,
+  "best_variant": "cross_scale_strict",
+  "cpp_metrics": {
+    "baseline": {
+      "Images": 198.0,
+      "PositiveMatches": 469.0,
+      "DetectedCount": 602.0,
+      "GroundTruthCount": 1165.0,
+      "Precision": 0.77907,
+      "Recall": 0.402575,
+      "FMeasure": 0.530843,
+      "AverageDetectedTimeMs": 0.0
+    },
+    "union_scale2_t77": {
+      "Images": 198.0,
+      "PositiveMatches": 560.0,
+      "DetectedCount": 940.0,
+      "GroundTruthCount": 1165.0,
+      "Precision": 0.595745,
+      "Recall": 0.480687,
+      "FMeasure": 0.532067,
+      "AverageDetectedTimeMs": 0.0
+    },
+    "union_all_scale": {
+      "Images": 198.0,
+      "PositiveMatches": 600.0,
+      "DetectedCount": 1811.0,
+      "GroundTruthCount": 1165.0,
+      "Precision": 0.331309,
+      "Recall": 0.515021,
+      "FMeasure": 0.403226,
+      "AverageDetectedTimeMs": 0.0
+    },
+    "stable_scale2": {
+      "Images": 198.0,
+      "PositiveMatches": 558.0,
+      "DetectedCount": 926.0,
+      "GroundTruthCount": 1165.0,
+      "Precision": 0.602592,
+      "Recall": 0.47897,
+      "FMeasure": 0.533716,
+      "AverageDetectedTimeMs": 0.0
+    },
+    "cross_scale": {
+      "Images": 198.0,
+      "PositiveMatches": 539.0,
+      "DetectedCount": 847.0,
+      "GroundTruthCount": 1165.0,
+      "Precision": 0.636364,
+      "Recall": 0.462661,
+      "FMeasure": 0.535785,
+      "AverageDetectedTimeMs": 0.0
+    },
+    "cross_scale_strict": {
+      "Images": 198.0,
+      "PositiveMatches": 534.0,
+      "DetectedCount": 815.0,
+      "GroundTruthCount": 1165.0,
+      "Precision": 0.655215,
+      "Recall": 0.458369,
+      "FMeasure": 0.539394,
+      "AverageDetectedTimeMs": 0.0
+    }
+  },
+  "python_metrics": {
+    "baseline": {
+      "images": 198,
+      "positive_matches": 469,
+      "detected_count": 586,
+      "ground_truth_count": 1165,
+      "precision": 0.8003412969283277,
+      "recall": 0.4025751072961373,
+      "fmeasure": 0.5356938892061678,
+      "size_group_recall": {
+        "radius_lt15": 0.1277533039647577,
+        "radius_15_30": 0.5714285714285714,
+        "radius_30_60": 0.584,
+        "radius_60_plus": 0.5821917808219178
+      }
+    },
+    "union_scale2_t77": {
+      "images": 198,
+      "positive_matches": 560,
+      "detected_count": 924,
+      "ground_truth_count": 1165,
+      "precision": 0.6060606060606061,
+      "recall": 0.48068669527896996,
+      "fmeasure": 0.5361416945907133,
+      "size_group_recall": {
+        "radius_lt15": 0.2907488986784141,
+        "radius_15_30": 0.6253968253968254,
+        "radius_30_60": 0.584,
+        "radius_60_plus": 0.5821917808219178
+      }
+    },
+    "union_all_scale": {
+      "images": 198,
+      "positive_matches": 600,
+      "detected_count": 1795,
+      "ground_truth_count": 1165,
+      "precision": 0.3342618384401114,
+      "recall": 0.5150214592274678,
+      "fmeasure": 0.4054054054054054,
+      "size_group_recall": {
+        "radius_lt15": 0.3590308370044053,
+        "radius_15_30": 0.653968253968254,
+        "radius_30_60": 0.584,
+        "radius_60_plus": 0.5821917808219178
+      }
+    },
+    "stable_scale2": {
+      "images": 198,
+      "positive_matches": 558,
+      "detected_count": 910,
+      "ground_truth_count": 1165,
+      "precision": 0.6131868131868132,
+      "recall": 0.47896995708154505,
+      "fmeasure": 0.5378313253012048,
+      "size_group_recall": {
+        "radius_lt15": 0.2907488986784141,
+        "radius_15_30": 0.6190476190476191,
+        "radius_30_60": 0.584,
+        "radius_60_plus": 0.5821917808219178
+      }
+    },
+    "cross_scale": {
+      "images": 198,
+      "positive_matches": 539,
+      "detected_count": 831,
+      "ground_truth_count": 1165,
+      "precision": 0.6486161251504212,
+      "recall": 0.46266094420600856,
+      "fmeasure": 0.5400801603206412,
+      "size_group_recall": {
+        "radius_lt15": 0.2599118942731278,
+        "radius_15_30": 0.6031746031746031,
+        "radius_30_60": 0.584,
+        "radius_60_plus": 0.5821917808219178
+      }
+    },
+    "cross_scale_strict": {
+      "images": 198,
+      "positive_matches": 534,
+      "detected_count": 799,
+      "ground_truth_count": 1165,
+      "precision": 0.6683354192740926,
+      "recall": 0.45836909871244635,
+      "fmeasure": 0.5437881873727087,
+      "size_group_recall": {
+        "radius_lt15": 0.2511013215859031,
+        "radius_15_30": 0.6,
+        "radius_30_60": 0.584,
+        "radius_60_plus": 0.5821917808219178
+      }
+    }
+  },
+  "bootstrap": {
+    "f1_delta_ci95": [
+      -0.01088569853550928,
+      0.028551081988134986
+    ],
+    "recall_delta_ci95": [
+      0.038460717335610566,
+      0.07508273492184382
+    ],
+    "f1_delta_mean": 0.00844181670441908,
+    "recall_delta_mean": 0.05586832727302092
+  },
+  "oracle_recall": {
+    "oracle_recall": 0.5141630901287554,
+    "total_gt": 1165,
+    "total_matched": 599
+  },
+  "small_analysis": {
+    "total_small_gt": 454,
+    "newly_recovered": 56,
+    "displaced": 0,
+    "still_missed": 340,
+    "still_matched": 58,
+    "baseline_small_recall": 0.1277533039647577,
+    "variant_small_recall": 0.2511013215859031
+  },
+  "branch_new_candidate_precision": {
+    "scale2_t77": 0.2869822485207101,
+    "scale2_t72": 0.2018181818181818,
+    "scale3_t77": 0.176,
+    "scale3_t72": 0.11224489795918367
+  },
+  "baseline_reproducibility": {
+    "reproduced": true,
+    "expected": {
+      "Precision": 0.77907,
+      "Recall": 0.402575,
+      "FMeasure": 0.530843
+    },
+    "actual": {
+      "Precision": 0.77907,
+      "Recall": 0.402575,
+      "FMeasure": 0.530843
+    }
+  },
+  "cases": [
+    "output\\scc_small_fpn\\stage2\\cases\\153_0028.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\193_0094.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\174_0043.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\011_0042.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\002_0038.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\003_0144.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\008_0132.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\011_0018.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\145_0192.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\145_0205.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\145_0222.jpg.png",
+    "output\\scc_small_fpn\\stage2\\cases\\145_0233.jpg.png"
+  ]
+}
