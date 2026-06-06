@@ -16,7 +16,7 @@ double calculateEllipseConfidence(const cv::RotatedRect& ellipse) {
     return (shapeScore + sizeScore) / 2.0;
 }
 
-bool isValidEllipse(const cv::RotatedRect& ellipse, double minSize = 5.0, double maxSize = 1000.0) {
+bool isValidEllipse(const cv::RotatedRect& ellipse, double minSize, double maxSize) {
     double minDim = std::min(ellipse.size.width, ellipse.size.height);
     double maxDim = std::max(ellipse.size.width, ellipse.size.height);
     
@@ -27,7 +27,7 @@ bool isValidEllipse(const cv::RotatedRect& ellipse, double minSize = 5.0, double
     return true;
 }
 
-double calculateEdgeContinuity(const cv::Mat& edgeImg, const cv::RotatedRect& ellipse, int samplePoints = 36) {
+double calculateEdgeContinuity(const cv::Mat& edgeImg, const cv::RotatedRect& ellipse, int samplePoints) {
     if (edgeImg.empty()) return 1.0;
     
     int count = 0;
@@ -68,8 +68,8 @@ void adaptiveThresholdFilter(std::vector<cv::RotatedRect>& ellipses,
     std::vector<double> continuityScores;
     double avgContinuity = 0.0;
     
-    for (const auto& ellipse : ellipses) {
-        double cont = calculateEdgeContinuity(edgeImg, ellipse);
+    for (size_t i = 0; i < ellipses.size(); i++) {
+        double cont = calculateEdgeContinuity(edgeImg, ellipses[i], 36);
         continuityScores.push_back(cont);
         avgContinuity += cont;
     }
@@ -80,7 +80,7 @@ void adaptiveThresholdFilter(std::vector<cv::RotatedRect>& ellipses,
     std::vector<cv::RotatedRect> filtered;
     std::vector<double> filteredScores;
     
-    for (size_t i = 0; i < ellipses.size(); ++i) {
+    for (size_t i = 0; i < ellipses.size(); i++) {
         double combinedScore = scores[i] * 0.6 + continuityScores[i] * 0.4;
         if (continuityScores[i] >= adaptiveThreshold && combinedScore > 0.3) {
             filtered.push_back(ellipses[i]);
@@ -94,21 +94,21 @@ void adaptiveThresholdFilter(std::vector<cv::RotatedRect>& ellipses,
 
 void clusterEllipsesByCenter(std::vector<cv::RotatedRect>& ellipses, 
                              std::vector<double>& scores,
-                             double clusterDistance = 20.0) {
+                             double clusterDistance) {
     if (ellipses.empty()) return;
     
     std::vector<bool> processed(ellipses.size(), false);
     std::vector<cv::RotatedRect> finalEllipses;
     std::vector<double> finalScores;
     
-    for (size_t i = 0; i < ellipses.size(); ++i) {
+    for (size_t i = 0; i < ellipses.size(); i++) {
         if (processed[i]) continue;
         
         std::vector<size_t> cluster;
         cluster.push_back(i);
         processed[i] = true;
         
-        for (size_t j = i + 1; j < ellipses.size(); ++j) {
+        for (size_t j = i + 1; j < ellipses.size(); j++) {
             if (processed[j]) continue;
             
             double dx = ellipses[i].center.x - ellipses[j].center.x;
@@ -128,7 +128,7 @@ void clusterEllipsesByCenter(std::vector<cv::RotatedRect>& ellipses,
             int bestIdx = cluster[0];
             double bestScore = scores[cluster[0]];
             
-            for (size_t k = 1; k < cluster.size(); ++k) {
+            for (size_t k = 1; k < cluster.size(); k++) {
                 if (scores[cluster[k]] > bestScore) {
                     bestScore = scores[cluster[k]];
                     bestIdx = cluster[k];
@@ -147,12 +147,13 @@ void clusterEllipsesByCenter(std::vector<cv::RotatedRect>& ellipses,
 void refineEllipseFit(std::vector<cv::RotatedRect>& ellipses, const cv::Mat& edgeImg) {
     if (ellipses.empty() || edgeImg.empty()) return;
     
-    for (auto& ellipse : ellipses) {
+    for (size_t i = 0; i < ellipses.size(); i++) {
         std::vector<cv::Point> edgePoints;
+        cv::RotatedRect& ellipse = ellipses[i];
         int sampleRadius = std::max(3, static_cast<int>(std::min(ellipse.size.width, ellipse.size.height) / 4));
         
-        for (int r = -sampleRadius; r <= sampleRadius; ++r) {
-            for (int c = -sampleRadius; c <= sampleRadius; ++c) {
+        for (int r = -sampleRadius; r <= sampleRadius; r++) {
+            for (int c = -sampleRadius; c <= sampleRadius; c++) {
                 int x = static_cast<int>(ellipse.center.x) + c;
                 int y = static_cast<int>(ellipse.center.y) + r;
                 
@@ -178,7 +179,7 @@ void refineEllipseFit(std::vector<cv::RotatedRect>& ellipses, const cv::Mat& edg
 
 void nonMaximumSuppression(std::vector<cv::RotatedRect>& ellipses, 
                            std::vector<double>& scores, 
-                           double iouThreshold = 0.5) {
+                           double iouThreshold) {
     if (ellipses.empty()) return;
     
     std::vector<int> indices(ellipses.size());
@@ -190,11 +191,11 @@ void nonMaximumSuppression(std::vector<cv::RotatedRect>& ellipses,
     
     std::vector<bool> suppressed(ellipses.size(), false);
     
-    for (size_t i = 0; i < indices.size(); ++i) {
+    for (size_t i = 0; i < indices.size(); i++) {
         int idx = indices[i];
         if (suppressed[idx]) continue;
         
-        for (size_t j = i + 1; j < indices.size(); ++j) {
+        for (size_t j = i + 1; j < indices.size(); j++) {
             int idx2 = indices[j];
             if (suppressed[idx2]) continue;
             
@@ -216,7 +217,7 @@ void nonMaximumSuppression(std::vector<cv::RotatedRect>& ellipses,
     std::vector<cv::RotatedRect> filteredEllipses;
     std::vector<double> filteredScores;
     
-    for (size_t i = 0; i < ellipses.size(); ++i) {
+    for (size_t i = 0; i < ellipses.size(); i++) {
         if (!suppressed[i]) {
             filteredEllipses.push_back(ellipses[i]);
             filteredScores.push_back(scores[i]);
@@ -227,7 +228,72 @@ void nonMaximumSuppression(std::vector<cv::RotatedRect>& ellipses,
     scores.swap(filteredScores);
 }
 
-} 
+void advancedNonMaximumSuppression(std::vector<cv::RotatedRect>& ellipses,
+                                   std::vector<double>& scores,
+                                   double iouThreshold) {
+    if (ellipses.empty()) return;
+    
+    std::vector<int> indices(ellipses.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    
+    std::sort(indices.begin(), indices.end(), [&](int a, int b) {
+        return scores[a] > scores[b];
+    });
+    
+    std::vector<bool> suppressed(ellipses.size(), false);
+    
+    for (size_t i = 0; i < indices.size(); i++) {
+        int idx = indices[i];
+        if (suppressed[idx]) continue;
+        
+        cv::RotatedRect& e1 = ellipses[idx];
+        cv::Rect2f bbox1 = e1.boundingRect2f();
+        
+        for (size_t j = i + 1; j < indices.size(); j++) {
+            int idx2 = indices[j];
+            if (suppressed[idx2]) continue;
+            
+            cv::RotatedRect& e2 = ellipses[idx2];
+            cv::Rect2f bbox2 = e2.boundingRect2f();
+            
+            float x1 = std::max(bbox1.x, bbox2.x);
+            float y1 = std::max(bbox1.y, bbox2.y);
+            float x2 = std::min(bbox1.x + bbox1.width, bbox2.x + bbox2.width);
+            float y2 = std::min(bbox1.y + bbox1.height, bbox2.y + bbox2.height);
+            
+            if (x2 <= x1 || y2 <= y1) continue;
+            
+            double inter = (x2 - x1) * (y2 - y1);
+            double unionArea = bbox1.width * bbox1.height + bbox2.width * bbox2.height - inter;
+            double iou = inter / unionArea;
+            
+            double dx = e1.center.x - e2.center.x;
+            double dy = e1.center.y - e2.center.y;
+            double dist = std::sqrt(dx * dx + dy * dy);
+            double avgRadius = (e1.size.width + e1.size.height + e2.size.width + e2.size.height) / 8.0;
+            double sizeDiff = std::abs(e1.size.width - e2.size.width) + std::abs(e1.size.height - e2.size.height);
+            
+            if (iou > iouThreshold || (dist < avgRadius * 0.3 && sizeDiff < 20)) {
+                suppressed[idx2] = true;
+            }
+        }
+    }
+    
+    std::vector<cv::RotatedRect> filteredEllipses;
+    std::vector<double> filteredScores;
+    
+    for (size_t i = 0; i < ellipses.size(); i++) {
+        if (!suppressed[i]) {
+            filteredEllipses.push_back(ellipses[i]);
+            filteredScores.push_back(scores[i]);
+        }
+    }
+    
+    ellipses.swap(filteredEllipses);
+    scores.swap(filteredScores);
+}
+
+} // end anonymous namespace
 
 void FLED::SetEnhancedParameters(double theta_fsa, double length_fsa, double T_val,
                                   double minConfidence, double minEllipseSize) {
@@ -242,13 +308,32 @@ void FLED::EnhancedPostProcessing(double confidenceThreshold, double iouThreshol
     std::vector<cv::RotatedRect> filtered;
     std::vector<double> filteredScores;
     
-    for (size_t i = 0; i < detEllipses.size(); ++i) {
-        if (!isValidEllipse(detEllipses[i], _min_ellipse_size, 2000.0)) {
+    double avgConfidence = 0.0;
+    for (size_t i = 0; i < detEllipses.size(); i++) {
+        avgConfidence += detEllipseScore[i];
+    }
+    avgConfidence /= detEllipses.size();
+    
+    double adaptiveThreshold = confidenceThreshold;
+    if (avgConfidence < 0.4) {
+        adaptiveThreshold = std::max(0.001, confidenceThreshold * 0.3);
+    } else if (avgConfidence < 0.6) {
+        adaptiveThreshold = std::max(0.001, confidenceThreshold * 0.6);
+    }
+    
+    for (size_t i = 0; i < detEllipses.size(); i++) {
+        double conf = detEllipseScore[i];
+        
+        if (conf < adaptiveThreshold) {
             continue;
         }
         
-        double conf = detEllipseScore[i];
-        if (conf < confidenceThreshold) {
+        double width = detEllipses[i].size.width;
+        double height = detEllipses[i].size.height;
+        if (width < 3 || height < 3) {
+            continue;
+        }
+        if (width > 2000 || height > 2000) {
             continue;
         }
         
@@ -259,11 +344,12 @@ void FLED::EnhancedPostProcessing(double confidenceThreshold, double iouThreshol
     detEllipses.swap(filtered);
     detEllipseScore.swap(filteredScores);
     
-    nonMaximumSuppression(detEllipses, detEllipseScore, iouThreshold);
+    if (detEllipses.size() > 1) {
+        nonMaximumSuppression(detEllipses, detEllipseScore, iouThreshold);
+    }
 }
 
-void FLED::EnhancedPostProcessingWithVisibility(const cv::Mat &edgeImg, 
-                                                 double confidenceThreshold, 
+void FLED::EnhancedPostProcessingWithVisibility(double confidenceThreshold, 
                                                  double iouThreshold,
                                                  double minCoverage) {
     if (detEllipses.empty()) return;
@@ -271,14 +357,40 @@ void FLED::EnhancedPostProcessingWithVisibility(const cv::Mat &edgeImg,
     std::vector<cv::RotatedRect> filtered;
     std::vector<double> filteredScores;
     
-    for (size_t i = 0; i < detEllipses.size(); ++i) {
+    double avgScore = 0.0;
+    for (size_t i = 0; i < detEllipses.size(); i++) {
+        avgScore += detEllipseScore[i];
+    }
+    avgScore /= detEllipses.size();
+    
+    double adaptiveConfThreshold = confidenceThreshold;
+    if (avgScore < 0.5) {
+        adaptiveConfThreshold = std::max(0.01, confidenceThreshold * 0.5);
+    }
+    
+    for (size_t i = 0; i < detEllipses.size(); i++) {
         if (!isValidEllipse(detEllipses[i], _min_ellipse_size, 2000.0)) {
             continue;
         }
         
         double conf = detEllipseScore[i];
-        if (conf < confidenceThreshold) {
+        if (conf < adaptiveConfThreshold) {
             continue;
+        }
+        
+        if (!imgCanny.empty()) {
+            double coverage = calculateEdgeContinuity(imgCanny, detEllipses[i], 48);
+            double dynamicCoverageThreshold = minCoverage;
+            
+            if (conf > 0.8) {
+                dynamicCoverageThreshold = minCoverage * 0.5;
+            } else if (conf > 0.6) {
+                dynamicCoverageThreshold = minCoverage * 0.7;
+            }
+            
+            if (coverage < dynamicCoverageThreshold) {
+                continue;
+            }
         }
         
         filtered.push_back(detEllipses[i]);
@@ -288,10 +400,8 @@ void FLED::EnhancedPostProcessingWithVisibility(const cv::Mat &edgeImg,
     detEllipses.swap(filtered);
     detEllipseScore.swap(filteredScores);
     
-    if (!edgeImg.empty()) {
-        VisibilityValidation::ValidateAndDedup(edgeImg, detEllipses, detEllipseScore, minCoverage, iouThreshold);
-    } else {
-        nonMaximumSuppression(detEllipses, detEllipseScore, iouThreshold);
+    if (!detEllipses.empty()) {
+        advancedNonMaximumSuppression(detEllipses, detEllipseScore, iouThreshold);
     }
 }
 
@@ -316,7 +426,7 @@ void FLED::MultiStageFiltering(const cv::Mat& edgeImg,
     std::vector<cv::RotatedRect> filtered;
     std::vector<double> filteredScores;
     
-    for (size_t i = 0; i < detEllipses.size(); ++i) {
+    for (size_t i = 0; i < detEllipses.size(); i++) {
         if (!isValidEllipse(detEllipses[i], _min_ellipse_size, 2000.0)) {
             continue;
         }
@@ -342,7 +452,7 @@ void FLED::MultiStageFiltering(const cv::Mat& edgeImg,
     std::vector<cv::RotatedRect> finalFiltered;
     std::vector<double> finalScores;
     
-    for (size_t i = 0; i < detEllipses.size(); ++i) {
+    for (size_t i = 0; i < detEllipses.size(); i++) {
         if (detEllipseScore[i] >= finalConfidence) {
             finalFiltered.push_back(detEllipses[i]);
             finalScores.push_back(detEllipseScore[i]);
@@ -359,10 +469,12 @@ void FLED::AdaptiveThresholdEnhancement(const cv::Mat& edgeImg) {
     std::vector<double> continuityScores;
     double maxContinuity = 0.0;
     
-    for (const auto& ellipse : detEllipses) {
-        double cont = calculateEdgeContinuity(edgeImg, ellipse);
+    for (size_t i = 0; i < detEllipses.size(); i++) {
+        double cont = calculateEdgeContinuity(edgeImg, detEllipses[i], 36);
         continuityScores.push_back(cont);
-        maxContinuity = std::max(maxContinuity, cont);
+        if (cont > maxContinuity) {
+            maxContinuity = cont;
+        }
     }
     
     double threshold = maxContinuity * 0.4;
@@ -370,7 +482,7 @@ void FLED::AdaptiveThresholdEnhancement(const cv::Mat& edgeImg) {
     std::vector<cv::RotatedRect> filtered;
     std::vector<double> filteredScores;
     
-    for (size_t i = 0; i < detEllipses.size(); ++i) {
+    for (size_t i = 0; i < detEllipses.size(); i++) {
         double combinedScore = detEllipseScore[i] * 0.5 + continuityScores[i] * 0.5;
         
         if (continuityScores[i] >= threshold && combinedScore > 0.25) {

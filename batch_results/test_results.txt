@@ -1,0 +1,97 @@
+=== æ¤­åœ†æ£€æµ‹æ‰¹é‡æµ‹è¯•æŠ¥å‘?===
+æµ‹è¯•æ—¶é—´: 06/03/2026 11:17:50
+æµ‹è¯•å›¾ç‰‡æ•°é‡: 30
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\data\images\002_0038.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\002_0038.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\003_0144.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\008_0132.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\011_0018.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\011_0042.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\011_0100.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\012_0001.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\012_0033.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\012_0190.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\014_0015.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\014_0033.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\015_0027.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\016_0033.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\016_0059.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\017_0048.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\017_0077.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\017_0078.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\018_0064.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\018_0076.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\018_0081.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\026_0025.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\027_0003.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\029_0001.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\029_0005.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\031_0008.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\031_0011.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\031_0012.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\031_0035.jpg
+æ£€æµ‹æ•°é‡? 0
+
+å›¾ç‰‡: C:\Users\Àî¼ÑÔó\Desktop\classic-ellipse-detector-main (1)\classic-ellipse-detector-main\aamed_ellipse_datasets\Prasad Images - Dataset Prasad\images\031_0038.jpg
+æ£€æµ‹æ•°é‡? 0
+
+=== æµ‹è¯•ç»Ÿè®¡ ===
+æ€»æ£€æµ‹æ¤­åœ†æ•°: 0
+å¹³å‡æ¯å¼ å›¾æ£€æµ? 0

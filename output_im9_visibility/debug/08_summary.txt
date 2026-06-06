@@ -1,0 +1,4 @@
+EdgeContours 242
+DPContours 221
+FSAArcs 28
+Detections 1

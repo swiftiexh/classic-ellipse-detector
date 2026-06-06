@@ -1,0 +1,8 @@
+Images: 198
+PositiveMatches: 415
+DetectedCount: 465
+GroundTruthCount: 1165
+Precision: 0.892473
+Recall: 0.356223
+FMeasure: 0.509202
+AverageDetectedTimeMs: 39.235388

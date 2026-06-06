@@ -1,0 +1,7 @@
+PreProcessingMs 31.8184
+ArcSegmentationMs 1.9326
+ArcGroupingMs 1.1813
+EllipseFittingMs 0.2277
+EllipseValidationMs 0.2101
+EllipseClusterMs 0.2227
+TotalMs 35.5928

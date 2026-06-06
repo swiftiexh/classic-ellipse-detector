@@ -239,14 +239,14 @@ void FLED::run_AAMED_WithoutCanny(Mat Img_G)
 #elif SELECT_CLUSTER_METHOD == PRASAD_CLUSTER_METHOD
 	ClusterEllipses(detEllipses, detEllipseScore);
 #endif
-	// Apply visibility-based verification and deduplication
-	if (!detEllipses.empty()) {
-		try {
-			::VisibilityValidation::ValidateAndDedup(imgCanny, detEllipses, detEllipseScore, 0.05, 0.5);
-		} catch (...) {
-			// keep previous results on any unexpected error
-		}
-	}
+	// Apply visibility-based verification and deduplication - disabled by default
+	// if (!detEllipses.empty()) {
+	// 	try {
+	// 		::VisibilityValidation::ValidateAndDedup(imgCanny, detEllipses, detEllipseScore, 0.05, 0.5);
+	// 	} catch (...) {
+	// 		// keep previous results on any unexpected error
+	// 	}
+	// }
 	asrs.clear();
 
 #ifdef DETAIL_BREAKDOWN
@@ -415,8 +415,8 @@ void FLED::run_FLED(Mat Img_G)
 #elif SELECT_CLUSTER_METHOD == PRASAD_CLUSTER_METHOD
 	ClusterEllipses(detEllipses, detEllipseScore);
 #endif
-	if (!detEllipses.empty())
-		VisibilityValidation::ValidateAndDedup(imgCanny, detEllipses, detEllipseScore, 0.05, 0.5);
+	// if (!detEllipses.empty())
+	// 	VisibilityValidation::ValidateAndDedup(imgCanny, detEllipses, detEllipseScore, 0.05, 0.5);
 	asrs.clear();
 	//cout << vld_use_time << endl;
 

@@ -1,0 +1,81 @@
+# contour_count 18
+contour 0 size 3
+30 78
+29 136
+30 190
+contour 1 size 11
+32 222
+34 233
+41 239
+53 239
+61 232
+61 218
+55 211
+48 209
+41 210
+34 216
+33 221
+contour 2 size 3
+36 1
+46 11
+87 8
+contour 3 size 3
+148 20
+125 20
+89 23
+contour 4 size 3
+235 89
+218 88
+181 90
+contour 5 size 3
+33 69
+70 68
+82 66
+contour 6 size 3
+180 72
+187 50
+186 30
+contour 7 size 3
+159 109
+177 111
+200 105
+contour 8 size 3
+135 137
+142 145
+165 145
+contour 9 size 3
+136 174
+136 150
+134 137
+contour 10 size 3
+183 167
+193 168
+210 159
+contour 11 size 3
+153 170
+163 162
+163 149
+contour 12 size 3
+227 166
+216 166
+205 172
+contour 13 size 3
+38 123
+48 125
+64 124
+contour 14 size 3
+194 218
+185 219
+173 225
+contour 15 size 3
+226 189
+216 185
+205 189
+contour 16 size 3
+113 162
+114 156
+112 138
+contour 17 size 3
+189 253
+185 243
+175 241

@@ -1,0 +1,2 @@
+# center_row center_col major_diameter minor_diameter angle_deg score
+225.867 118.242 76.8982 75.139 39.6583 0.886798

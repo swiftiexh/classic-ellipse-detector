@@ -112,11 +112,7 @@ int main(int argc, char **argv)
 	aamed.SetParameters(CV_PI / 3.0, 3.0, 0.76);
 	aamed.run_FLED(imgGray);
 	
-	cv::Mat edgeImg;
-    cv::Canny(imgGray, edgeImg, 50, 150);
-	
-	aamed.EnhancedPostProcessing(0.55, 0.45);
-	aamed.AdvancedEllipseRefinement(edgeImg, true, false);
+	// 原始配置 - run_FLED内部已包含非极大值抑制
 
 	cv::Vec<double, 10> detailTime = cv::Vec<double, 10>::all(0);
 	aamed.showDetailBreakdown(detailTime, options.quiet ? 0 : 1);

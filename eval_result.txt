@@ -1,0 +1,8 @@
+Images: 1200
+PositiveMatches: 0
+DetectedCount: 0
+GroundTruthCount: 16800
+Precision: 0.000000
+Recall: 0.000000
+FMeasure: 0.000000
+AverageDetectedTimeMs: 0.000000

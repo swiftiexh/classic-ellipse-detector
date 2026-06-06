@@ -59,8 +59,7 @@ public:
 	void SetEnhancedParameters(double theta_fsa, double length_fsa, double T_val,
 		double minConfidence = 0.8, double minEllipseSize = 10.0);
 	void EnhancedPostProcessing(double confidenceThreshold = 0.8, double iouThreshold = 0.5);
-	void EnhancedPostProcessingWithVisibility(const cv::Mat &edgeImg, 
-		double confidenceThreshold = 0.8, double iouThreshold = 0.5, double minCoverage = 0.1);
+	void EnhancedPostProcessingWithVisibility(double confidenceThreshold = 0.8, double iouThreshold = 0.5, double minCoverage = 0.1);
 	void AdvancedEllipseRefinement(const cv::Mat& edgeImg, bool refineFit = true, bool enableClustering = true);
 	void MultiStageFiltering(const cv::Mat& edgeImg, 
 		double initialConfidence = 0.5, double finalConfidence = 0.6, double clusterDistance = 20.0);
