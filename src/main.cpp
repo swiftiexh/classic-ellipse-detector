@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 
 	AAMED aamed(imgGray.rows + 16, imgGray.cols + 16);
 	
-	aamed.SetParameters(CV_PI / 3.0, 3.0, 0.76);
+	aamed.SetParameters(CV_PI / 3.0, 3.0, 0.74);
 	aamed.run_FLED(imgGray);
 	
 	// 原始配置 - run_FLED内部已包含非极大值抑制
