@@ -408,7 +408,10 @@ bool FLED::fastValidation(cv::RotatedRect &res, double *detScore)
 	Node_FC *node_temp(NULL), *node_next = NULL, *node_last = NULL;
 	Point l_i;
 	cv::Point2f g_i;
-	float inSw = 0, outSw = 0, inNum = 0, onNum = 0;
+	float inSw = 0, outSw = 0, inNum = 0, onNum = 0, strongGradNum = 0;
+	const bool smallGuardEnabled = _smallEllipseGuardConfig.enable;
+	const float smallAxisThreshold = _smallEllipseGuardConfig.minAxisThreshold;
+	const float strongGradThreshold = _smallEllipseGuardConfig.strongGradientScoreThreshold;
 	for (int i = 0; i < RoundEllipseCircum; i++)
 	{
 		angle_idx = round(i*step);
@@ -434,7 +437,10 @@ bool FLED::fastValidation(cv::RotatedRect &res, double *detScore)
 
 		if (_boldData[idxixy] == 0)
 		{
-			E_score += w * 0.5;
+			if (smallGuardEnabled && std::min(R, r) < smallAxisThreshold)
+				E_score += w * _smallEllipseGuardConfig.missingEdgeCompensation;
+			else
+				E_score += w * 0.5f;
 			continue;
 		}
 		onNum += 1;
@@ -663,7 +669,10 @@ bool FLED::fastValidation(cv::RotatedRect &res, double *detScore)
 	Node_FC *node_temp(NULL), *node_next = NULL, *node_last = NULL;
 	Point l_i;
 	cv::Point2f g_i;
-	float inSw = 0, outSw = 0, inNum = 0, onNum = 0;
+	float inSw = 0, outSw = 0, inNum = 0, onNum = 0, strongGradNum = 0;
+	const bool smallGuardEnabled = _smallEllipseGuardConfig.enable;
+	const float smallAxisThreshold = _smallEllipseGuardConfig.minAxisThreshold;
+	const float strongGradThreshold = _smallEllipseGuardConfig.strongGradientScoreThreshold;
 	for (int i = 0; i < RoundEllipseCircum; i++)
 	{
 		angle_idx = round(i*step);
@@ -689,7 +698,10 @@ bool FLED::fastValidation(cv::RotatedRect &res, double *detScore)
 
 		if (_boldData[idxixy] == 0)
 		{
-			E_score += w * 0.5;
+			if (smallGuardEnabled && std::min(R, r) < smallAxisThreshold)
+				E_score += w * _smallEllipseGuardConfig.missingEdgeCompensation;
+			else
+				E_score += w * 0.5f;
 			continue;
 		}
 		onNum += 1;
@@ -765,7 +777,14 @@ bool FLED::fastValidation(cv::RotatedRect &res, double *detScore)
 		//	continue;
 		//E_score += w*(norm_li_gi - 0.707106781186548) / (1 - 0.707106781186548);
 		if (norm_li_gi > 1) norm_li_gi = 1;
-		E_score += w * abs(1 - 2 / CV_PI * acos(norm_li_gi));
+		{
+			const float localScore = abs(1 - 2 / CV_PI * acos(norm_li_gi));
+			E_score += w * localScore;
+			if (smallGuardEnabled && localScore > strongGradThreshold)
+			{
+				strongGradNum += 1.0f;
+			}
+		}
 
 		//E_score += w;
 
@@ -779,6 +798,20 @@ bool FLED::fastValidation(cv::RotatedRect &res, double *detScore)
 	}
 	//E_score = E_score / sum_w*RoundEllipseCircum;
 
+	if (smallGuardEnabled && _smallEllipseGuardConfig.hardRejectWeakSmallCandidates)
+	{
+		const float minAxis = std::min(R, r);
+		if (minAxis < smallAxisThreshold && inNum > 0)
+		{
+			const float edgeCoverage = onNum / inNum;
+			const float strongGradCoverage = onNum > 0 ? strongGradNum / onNum : 0.0f;
+			if (edgeCoverage < _smallEllipseGuardConfig.minEdgeCoverage &&
+				strongGradCoverage < _smallEllipseGuardConfig.minStrongGradientCoverage)
+			{
+				return false;
+			}
+		}
+	}
 
 	if (E_score > inNum * _T_val)
 	{

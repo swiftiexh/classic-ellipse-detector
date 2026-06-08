@@ -32,6 +32,21 @@ void FLED::SetParameters(double theta_fsa, double length_fsa, double T_val)
 
 }
 
+void FLED::SetWeightedArcConfig(const experiment::WeightedArcConfig &config)
+{
+	_weightedArcConfig = config;
+}
+
+void FLED::SetMultiScaleConfig(const experiment::MultiScaleFpnConfig &config)
+{
+	_multiScaleFpnConfig = config;
+}
+
+void FLED::SetSmallEllipseGuardConfig(const experiment::SmallEllipseGuardConfig &config)
+{
+	_smallEllipseGuardConfig = config;
+}
+
 void FLED::SetParameters(double T_dp, double theta_fsa, double length_fsa, double T_val, int grad_num)
 {
 	assert(T_dp >= std::sqrt(2.0) / 2);
@@ -46,8 +61,6 @@ void FLED::SetParameters(double T_dp, double theta_fsa, double length_fsa, doubl
 
 	_T_edge_num = get_T_edge_num(T_dp, theta_fsa, _T_min_minor);
 }
-
-
 
 
 

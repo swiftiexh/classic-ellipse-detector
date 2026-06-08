@@ -2,6 +2,9 @@
 #include "adaptApproximateContours.h"
 #include "EllipseNonMaximumSuppression.h"
 
+#include <algorithm>
+#include <cmath>
+
 FLED::FLED(int drows, int dcols)
 {
 	
@@ -34,6 +37,7 @@ FLED::FLED(int drows, int dcols)
 	}
 
 	LinkMatrix.Update(800 * 800);
+	LinkWeight.Update(800 * 800);
 	lA.resize(800);
 
 	visited.Update(800);
@@ -78,6 +82,7 @@ void FLED::release()
 		delete[] data;
 
 	LinkMatrix.release();
+	LinkWeight.release();
 	visited.release();
 //	lA.release();
 
@@ -419,6 +424,237 @@ void FLED::run_FLED(Mat Img_G)
 
 
 
+void FLED::run_FLED_MultiScale(Mat Img_G)
+{
+	if (!_multiScaleFpnConfig.enable)
+	{
+		run_FLED(Img_G);
+		return;
+	}
+
+	const double baselineTheta = _theta_fsa;
+	const double baselineLambda = _length_fsa;
+	const double baselineValidationThreshold = _T_val;
+
+	run_FLED(Img_G);
+	const vector<cv::RotatedRect> baselineEllipses = detEllipses;
+	const vector<double> baselineScores = detEllipseScore;
+
+	vector<MultiScaleCandidate> candidates;
+	for (int scale : _multiScaleFpnConfig.scales)
+	{
+		if (scale <= 1)
+			continue;
+
+		for (double validationThreshold : _multiScaleFpnConfig.validationThresholds)
+		{
+			cv::Mat upscaled;
+			const int interpolation = _multiScaleFpnConfig.useCubicInterpolation ? cv::INTER_CUBIC : cv::INTER_LINEAR;
+			cv::resize(
+				Img_G,
+				upscaled,
+				cv::Size(Img_G.cols * scale, Img_G.rows * scale),
+				0.0,
+				0.0,
+				interpolation);
+
+			SetParameters(baselineTheta, baselineLambda, validationThreshold);
+			run_FLED(upscaled);
+			remapMultiScaleCandidates(scale, validationThreshold, detEllipses, detEllipseScore, candidates);
+		}
+	}
+
+	SetParameters(baselineTheta, baselineLambda, baselineValidationThreshold);
+	detEllipses = baselineEllipses;
+	detEllipseScore = baselineScores;
+	fuseMultiScaleCandidates(baselineEllipses, baselineScores, candidates);
+}
+
+void FLED::remapMultiScaleCandidates(
+	int scale,
+	double validationThreshold,
+	const vector<cv::RotatedRect> &detections,
+	const vector<double> &scores,
+	vector<MultiScaleCandidate> &outCandidates) const
+{
+	const double invScale = 1.0 / double(scale);
+	for (size_t idx = 0; idx < detections.size(); ++idx)
+	{
+		MultiScaleCandidate candidate;
+		candidate.scale = scale;
+		candidate.validationThreshold = validationThreshold;
+		candidate.branchLabel = "s" + std::to_string(scale) + "_t" + std::to_string(int(std::lround(validationThreshold * 100.0)));
+		candidate.ellipse = detections[idx];
+		candidate.ellipse.center.x *= invScale;
+		candidate.ellipse.center.y *= invScale;
+		candidate.ellipse.size.width *= invScale;
+		candidate.ellipse.size.height *= invScale;
+		candidate.score = idx < scores.size() ? scores[idx] : 0.0;
+
+		const double semiMajor = candidate.ellipse.size.width * 0.5;
+		const double semiMinor = candidate.ellipse.size.height * 0.5;
+		const double remappedRadius = std::sqrt(std::max(0.0, semiMajor * semiMinor));
+		if (remappedRadius <= _multiScaleFpnConfig.remapRadiusMax)
+		{
+			outCandidates.push_back(candidate);
+		}
+	}
+}
+
+void FLED::buildMultiScaleIoUGraph(
+	const vector<MultiScaleCandidate> &candidates,
+	vector<vector<int>> &graph) const
+{
+	const int candidateNum = int(candidates.size());
+	graph.assign(candidateNum, vector<int>());
+	for (int i = 0; i < candidateNum; ++i)
+	{
+		for (int j = i + 1; j < candidateNum; ++j)
+		{
+			cv::RotatedRect lhs = candidates[i].ellipse;
+			cv::RotatedRect rhs = candidates[j].ellipse;
+			if (EllipseOverlap(lhs, rhs) >= _multiScaleFpnConfig.fusionIoU)
+			{
+				graph[i].push_back(j);
+				graph[j].push_back(i);
+			}
+		}
+	}
+}
+
+void FLED::findMultiScaleClusters(
+	const vector<vector<int>> &graph,
+	vector<vector<int>> &clusters) const
+{
+	const int nodeNum = int(graph.size());
+	vector<unsigned char> visited(nodeNum, 0);
+	clusters.clear();
+	for (int root = 0; root < nodeNum; ++root)
+	{
+		if (visited[root] != 0)
+			continue;
+
+		vector<int> component;
+		std::vector<int> queue(1, root);
+		visited[root] = 1;
+		size_t head = 0;
+		while (head < queue.size())
+		{
+			const int current = queue[head++];
+			component.push_back(current);
+			for (int next : graph[current])
+			{
+				if (visited[next] == 0)
+				{
+					visited[next] = 1;
+					queue.push_back(next);
+				}
+			}
+		}
+		clusters.push_back(component);
+	}
+}
+
+int FLED::selectMultiScaleRepresentative(
+	const vector<int> &cluster,
+	const vector<MultiScaleCandidate> &candidates) const
+{
+	if (cluster.empty())
+		return -1;
+
+	int bestIdx = cluster.front();
+	double bestAvgIoU = -1.0;
+	double bestScore = -1.0;
+	for (int idx : cluster)
+	{
+		double iouSum = 0.0;
+		int iouCount = 0;
+		for (int other : cluster)
+		{
+			if (other == idx)
+				continue;
+			cv::RotatedRect lhs = candidates[idx].ellipse;
+			cv::RotatedRect rhs = candidates[other].ellipse;
+			iouSum += EllipseOverlap(lhs, rhs);
+			++iouCount;
+		}
+		const double avgIoU = iouCount > 0 ? iouSum / iouCount : 1.0;
+		const double candidateScore = candidates[idx].score;
+		if (avgIoU > bestAvgIoU ||
+			(std::abs(avgIoU - bestAvgIoU) < 1e-9 && candidates[idx].scale > candidates[bestIdx].scale) ||
+			(std::abs(avgIoU - bestAvgIoU) < 1e-9 && candidates[idx].scale == candidates[bestIdx].scale && candidateScore > bestScore))
+		{
+			bestIdx = idx;
+			bestAvgIoU = avgIoU;
+			bestScore = candidateScore;
+		}
+	}
+	return bestIdx;
+}
+
+void FLED::fuseMultiScaleCandidates(
+	const vector<cv::RotatedRect> &baselineEllipses,
+	const vector<double> &baselineScores,
+	const vector<MultiScaleCandidate> &candidates)
+{
+	if (candidates.empty())
+	{
+		detEllipses = baselineEllipses;
+		detEllipseScore = baselineScores;
+		return;
+	}
+
+	vector<vector<int>> graph;
+	buildMultiScaleIoUGraph(candidates, graph);
+
+	vector<vector<int>> clusters;
+	findMultiScaleClusters(graph, clusters);
+
+	detEllipses = baselineEllipses;
+	detEllipseScore = baselineScores;
+
+	for (const vector<int> &cluster : clusters)
+	{
+		vector<std::string> branches;
+		bool hasScale2 = false;
+		bool hasScale3 = false;
+		for (int idx : cluster)
+		{
+			if (std::find(branches.begin(), branches.end(), candidates[idx].branchLabel) == branches.end())
+				branches.push_back(candidates[idx].branchLabel);
+			hasScale2 = hasScale2 || candidates[idx].scale == 2;
+			hasScale3 = hasScale3 || candidates[idx].scale == 3;
+		}
+
+		if (int(branches.size()) < _multiScaleFpnConfig.minBranches)
+			continue;
+		if (_multiScaleFpnConfig.requireCrossScale && !(hasScale2 && hasScale3))
+			continue;
+
+		const int representative = selectMultiScaleRepresentative(cluster, candidates);
+		if (representative < 0)
+			continue;
+
+		cv::RotatedRect selected = candidates[representative].ellipse;
+		bool isDuplicate = false;
+		for (const cv::RotatedRect &existing : detEllipses)
+		{
+			cv::RotatedRect lhs = selected;
+			cv::RotatedRect rhs = existing;
+			if (EllipseOverlap(lhs, rhs) >= _multiScaleFpnConfig.fusionIoU)
+			{
+				isDuplicate = true;
+				break;
+			}
+		}
+		if (!isDuplicate)
+		{
+			detEllipses.push_back(selected);
+			detEllipseScore.push_back(candidates[representative].score);
+		}
+	}
+}
+
 void FLED::getArcs_KDTrees(vector< vector<Point> > & arcs)
 {
 	source_arcs.create(arcs.size(), 2, CV_32FC1);
@@ -458,7 +694,9 @@ void FLED::Arcs_Grouping(vector< vector<Point> > &fsaarcs)
 	Point vecFeature[8];
 
 	LinkMatrix.Update(fsaarcs_num*fsaarcs_num);// 更新邻接矩阵个数
+	LinkWeight.Update(fsaarcs_num*fsaarcs_num);
 	char* _LinkMatrix = LinkMatrix.GetDataPoint();
+	float* _linkWeight = LinkWeight.GetDataPoint();
 
 	int T_ij, T_ji;
 	Point *_vec_data_i = NULL, *_vec_data_j = NULL; //获取vector的数据指针
@@ -585,6 +823,10 @@ void FLED::Arcs_Grouping(vector< vector<Point> > &fsaarcs)
 			default:
 				break;
 			}
+			if (_weightedArcConfig.enable)
+				_linkWeight[_linkIdx] = computeSoftLinkWeight(i, findIdx, l1, l2, _asr1, _asr2, int(_dist_arcs[j]));
+			else
+				_linkWeight[_linkIdx] = 0.0f;
 			//if (i == 25 && findIdx == 32)
 			//	cout << group_res << endl;
 			//if (i == 32 && findIdx == 25)
@@ -597,7 +839,10 @@ void FLED::Arcs_Grouping(vector< vector<Point> > &fsaarcs)
 
 			_LinkMatrix[_linkIdx] = group_res;
 			if (group_res == -1)
+			{
 				_LinkMatrix[findIdx*fsaarcs_num + i] = -1;
+				_linkWeight[_linkIdx] = 0.0f;
+			}
 			//if (findIdx == i&&group_res==-1) //若弧段i不能跟自己相连，则这个弧段不可能跟其余的相连
 			//{
 			//	for (int j = 0; j < fsaarcs_num; j++)
@@ -614,6 +859,7 @@ void FLED::Arcs_Grouping(vector< vector<Point> > &fsaarcs)
 void FLED::getlinkArcs(const char *_linkMatrix, int arc_num)
 {
 	lA.resize(arc_num);
+	const float *_linkWeight = LinkWeight.GetDataPoint();
 	//查找第i个弧段相连的弧段和不相连的
 	for (int i = 0; i < arc_num; i++)
 	{
@@ -621,6 +867,8 @@ void FLED::getlinkArcs(const char *_linkMatrix, int arc_num)
 		//	cout << "Begin Error" << endl;
 		int idx = i*arc_num;
 		lA[i].clear();
+		vector<int> linkingSoft;
+		vector<int> linkedSoft;
 		for (int j = 0; j < arc_num; j++)
 		{
 			//if (i == 32)
@@ -631,10 +879,166 @@ void FLED::getlinkArcs(const char *_linkMatrix, int arc_num)
 				lA[i].idx_linking.push_back(j);
 			else if (_linkMatrix[idx + j] == -1) //i与j不连，则不连
 				lA[i].idx_notlink.push_back(j);
+			if (_weightedArcConfig.enable &&
+				_linkMatrix[idx + j] == 0 &&
+				_linkWeight[idx + j] >= _weightedArcConfig.softLinkThreshold)
+			{
+				linkingSoft.push_back(j);
+			}
 			if (_linkMatrix[j*arc_num + i] == 1)
 				lA[i].idx_linked.push_back(j);
+			if (_weightedArcConfig.enable &&
+				_linkMatrix[j*arc_num + i] == 0 &&
+				_linkWeight[j*arc_num + i] >= _weightedArcConfig.softLinkThreshold)
+			{
+				linkedSoft.push_back(j);
+			}
+		}
+
+		if (_weightedArcConfig.enable)
+		{
+			auto sortByWeight = [_linkWeight, arc_num, i](vector<int> &indices, bool reverseDirection)
+			{
+				std::sort(indices.begin(), indices.end(),
+					[_linkWeight, arc_num, i, reverseDirection](int lhs, int rhs)
+				{
+					const float lhsWeight = reverseDirection ? _linkWeight[lhs * arc_num + i] : _linkWeight[i * arc_num + lhs];
+					const float rhsWeight = reverseDirection ? _linkWeight[rhs * arc_num + i] : _linkWeight[i * arc_num + rhs];
+					return lhsWeight > rhsWeight;
+				});
+			};
+
+			sortByWeight(lA[i].idx_linking, false);
+			sortByWeight(linkingSoft, false);
+			sortByWeight(lA[i].idx_linked, true);
+			sortByWeight(linkedSoft, true);
+
+			if ((int)linkingSoft.size() > _weightedArcConfig.maxSoftNeighborsPerDirection)
+				linkingSoft.resize(_weightedArcConfig.maxSoftNeighborsPerDirection);
+			if ((int)linkedSoft.size() > _weightedArcConfig.maxSoftNeighborsPerDirection)
+				linkedSoft.resize(_weightedArcConfig.maxSoftNeighborsPerDirection);
+
+			lA[i].idx_linking.insert(lA[i].idx_linking.end(), linkingSoft.begin(), linkingSoft.end());
+			lA[i].idx_linked.insert(lA[i].idx_linked.end(), linkedSoft.begin(), linkedSoft.end());
 		}
 	}
+}
+
+float FLED::getPairLinkWeight(int fromIdx, int toIdx) const
+{
+	if (!_weightedArcConfig.enable || fromIdx < 0 || toIdx < 0)
+		return 0.0f;
+	const int arcNum = int(FSA_ArcContours.size());
+	if (fromIdx >= arcNum || toIdx >= arcNum)
+		return 0.0f;
+	return LinkWeight.GetDataPoint()[fromIdx * arcNum + toIdx];
+}
+
+float FLED::computeSoftLinkWeight(
+	int srcIdx,
+	int dstIdx,
+	const Point * const *l1,
+	const Point * const *l2,
+	const ArcSearchRegion * const asri,
+	const ArcSearchRegion * const asrk,
+	int forwardGap) const
+{
+	if (!_weightedArcConfig.enable || srcIdx == dstIdx)
+		return 0.0f;
+
+	const float tailGap = float(abs(l1[3]->x - l2[0]->x) + abs(l1[3]->y - l2[0]->y));
+	const float reverseGap = float(abs(l1[0]->x - l2[3]->x) + abs(l1[0]->y - l2[3]->y));
+	const float localScale = float(std::max(4.0, std::min(
+		double(abs(l1[3]->x - l1[2]->x) + abs(l1[3]->y - l1[2]->y) +
+			abs(l2[1]->x - l2[0]->x) + abs(l2[1]->y - l2[0]->y)),
+		18.0)));
+
+	const float distScore = std::max(0.0f, 1.0f - tailGap / (2.5f * localScale + 6.0f));
+	const float reverseScore = std::max(0.0f, 1.0f - reverseGap / (2.5f * localScale + 6.0f));
+
+	const cv::Point2f t1(float(l1[3]->x - l1[2]->x), float(l1[3]->y - l1[2]->y));
+	const cv::Point2f t2(float(l2[1]->x - l2[0]->x), float(l2[1]->y - l2[0]->y));
+	const float n1 = std::sqrt(t1.x * t1.x + t1.y * t1.y);
+	const float n2 = std::sqrt(t2.x * t2.x + t2.y * t2.y);
+	float tangentScore = 0.0f;
+	if (n1 > 1e-4f && n2 > 1e-4f)
+	{
+		const float cosine = (t1.x * t2.x + t1.y * t2.y) / (n1 * n2);
+		tangentScore = std::max(0.0f, 0.5f * (cosine + 1.0f));
+	}
+
+	const bool mutualRegion = RegionConstraint(asri, asrk) && RegionConstraint(asrk, asri);
+	const float regionScore = mutualRegion ? 1.0f : 0.35f;
+
+	const vector<Point> &srcArc = FSA_ArcContours[srcIdx];
+	const vector<Point> &dstArc = FSA_ArcContours[dstIdx];
+	const Point &srcSt = srcArc.front();
+	const Point &srcEd = srcArc.back();
+	const Point &dstSt = dstArc.front();
+	const Point &dstEd = dstArc.back();
+	const float srcSpan = float(std::abs(data[dIDX(srcEd.x, srcEd.y)].edgeID - data[dIDX(srcSt.x, srcSt.y)].edgeID));
+	const float dstSpan = float(std::abs(data[dIDX(dstEd.x, dstEd.y)].edgeID - data[dIDX(dstSt.x, dstSt.y)].edgeID));
+	const float supportNorm = float(std::max(6.0, _T_edge_num));
+	const float srcSupport = std::min(1.0f, srcSpan / supportNorm);
+	const float dstSupport = std::min(1.0f, dstSpan / supportNorm);
+	const float supportScore = 0.5f * (srcSupport + dstSupport);
+
+	const float kdScore = std::max(0.0f, 1.0f - float(forwardGap) / std::max(8.0f, 2.0f * localScale));
+	const float score =
+		0.28f * distScore +
+		0.18f * reverseScore +
+		0.22f * tangentScore +
+		0.17f * supportScore +
+		0.15f * kdScore;
+
+	return std::max(0.0f, std::min(1.0f, score * regionScore));
+}
+
+double FLED::computeGroupCompatibility(const vector<int> &group) const
+{
+	if (!_weightedArcConfig.enable || group.size() <= 1)
+		return 0.0;
+
+	double weightSum = 0.0;
+	int weightCount = 0;
+	for (size_t i = 0; i + 1 < group.size(); ++i)
+	{
+		const float forward = getPairLinkWeight(group[i], group[i + 1]);
+		const float backward = getPairLinkWeight(group[i + 1], group[i]);
+		const float pairWeight = std::max(forward, backward);
+		if (pairWeight > 0.0f)
+		{
+			weightSum += pairWeight;
+			++weightCount;
+		}
+	}
+
+	return weightCount > 0 ? weightSum / weightCount : 0.0;
+}
+
+double FLED::computeCrossGroupCompatibility(const vector<int> &leftGroup, const vector<int> &rightGroup) const
+{
+	if (!_weightedArcConfig.enable || leftGroup.empty() || rightGroup.empty())
+		return 0.0;
+
+	double weightSum = 0.0;
+	int weightCount = 0;
+	for (int leftArc : leftGroup)
+	{
+		for (int rightArc : rightGroup)
+		{
+			const float lr = getPairLinkWeight(leftArc, rightArc);
+			const float rl = getPairLinkWeight(rightArc, leftArc);
+			const float pairWeight = std::max(lr, rl);
+			if (pairWeight > 0.0f)
+			{
+				weightSum += pairWeight;
+				++weightCount;
+			}
+		}
+	}
+
+	return weightCount > 0 ? weightSum / weightCount : 0.0;
 }
 
 

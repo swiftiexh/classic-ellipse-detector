@@ -8,6 +8,7 @@
 
 #include "Node_FC.h"
 #include "definition.h"
+#include "ExperimentConfig.h"
 #include "LinkMatrix.h"
 #include "EllipseConstraint.h"
 
@@ -42,6 +43,9 @@ class FLED
 public:
 	FLED(int drows, int dcols);
 	void SetParameters(double theta_fsa, double length_fsa, double T_val);
+	void SetWeightedArcConfig(const experiment::WeightedArcConfig &config);
+	void SetMultiScaleConfig(const experiment::MultiScaleFpnConfig &config);
+	void SetSmallEllipseGuardConfig(const experiment::SmallEllipseGuardConfig &config);
 	vector<cv::RotatedRect> detEllipses;
 	~FLED()
 	{
@@ -54,6 +58,7 @@ public:
 	void release();// release data;
     bool checkInputImage(int rows, int cols);
 	void run_FLED(Mat Img_G);
+	void run_FLED_MultiScale(Mat Img_G);
 	void run_AAMED_WithoutCanny(Mat Img_G);
 public:// Draw Data and Write Information Functions
 	void drawEdgeContours();
@@ -135,6 +140,18 @@ private: //The list of parameters.
 	// The list of adaptive parameters
 	double _T_edge_num; //Independent of image size
 	double _T_min_minor; //Independent of image size
+	experiment::WeightedArcConfig _weightedArcConfig;
+	experiment::MultiScaleFpnConfig _multiScaleFpnConfig;
+	experiment::SmallEllipseGuardConfig _smallEllipseGuardConfig;
+
+	struct MultiScaleCandidate
+	{
+		int scale = 1;
+		double validationThreshold = 0.77;
+		std::string branchLabel;
+		cv::RotatedRect ellipse;
+		double score = 0.0;
+	};
 
 private:
 	double sum_time;
@@ -168,6 +185,7 @@ private:
 
 	// The part of arc adjacency matrix (AAM)
 	GroupPart<char> LinkMatrix;
+	GroupPart<float> LinkWeight;
 	struct linkArc
 	{
 		int idx;
@@ -193,6 +211,17 @@ private:
 	};
 	std::vector<linkArc> lA;
 	void getlinkArcs(const char *_linkMatrix, int arc_num);
+	float getPairLinkWeight(int fromIdx, int toIdx) const;
+	float computeSoftLinkWeight(
+		int srcIdx,
+		int dstIdx,
+		const Point * const *l1,
+		const Point * const *l2,
+		const ArcSearchRegion * const asri,
+		const ArcSearchRegion * const asrk,
+		int forwardGap) const;
+	double computeGroupCompatibility(const vector<int> &group) const;
+	double computeCrossGroupCompatibility(const vector<int> &leftGroup, const vector<int> &rightGroup) const;
 
 
 
@@ -231,6 +260,25 @@ private:
 	bool Validation(cv::RotatedRect &res, double *detScore);
 	bool fastValidation(cv::RotatedRect &res, double *detScore);
 	double vld_use_time;
+	void remapMultiScaleCandidates(
+		int scale,
+		double validationThreshold,
+		const vector<cv::RotatedRect> &detections,
+		const vector<double> &scores,
+		vector<MultiScaleCandidate> &outCandidates) const;
+	void buildMultiScaleIoUGraph(
+		const vector<MultiScaleCandidate> &candidates,
+		vector<vector<int>> &graph) const;
+	void findMultiScaleClusters(
+		const vector<vector<int>> &graph,
+		vector<vector<int>> &clusters) const;
+	int selectMultiScaleRepresentative(
+		const vector<int> &cluster,
+		const vector<MultiScaleCandidate> &candidates) const;
+	void fuseMultiScaleCandidates(
+		const vector<cv::RotatedRect> &baselineEllipses,
+		const vector<double> &baselineScores,
+		const vector<MultiScaleCandidate> &candidates);
 
 
 	//Validation Data

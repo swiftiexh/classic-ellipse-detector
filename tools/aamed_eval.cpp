@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "../src/ExperimentConfig.h"
+
 namespace fs = std::filesystem;
 
 namespace
@@ -87,11 +89,90 @@ struct EvalConfig
 
 EvalConfig buildConfig()
 {
-	return EvalConfig{};
+	const experiment::ExperimentConfig shared = experiment::BuildExperimentConfig();
+
+	auto mapGroundTruthSource = [](experiment::EvalGroundTruthSource source)
+	{
+		switch (source)
+		{
+		case experiment::EvalGroundTruthSource::PlainTextWithCount:
+			return GroundTruthSource::PlainTextWithCount;
+		case experiment::EvalGroundTruthSource::MatlabMatrix:
+			return GroundTruthSource::MatlabMatrix;
+		}
+		return GroundTruthSource::PlainTextWithCount;
+	};
+
+	auto mapConvention = [](experiment::EvalEllipseConvention convention)
+	{
+		switch (convention)
+		{
+		case experiment::EvalEllipseConvention::XYRad:
+			return EllipseConvention::XYRad;
+		case experiment::EvalEllipseConvention::XYDeg:
+			return EllipseConvention::XYDeg;
+		case experiment::EvalEllipseConvention::RowColRad:
+			return EllipseConvention::RowColRad;
+		case experiment::EvalEllipseConvention::RowColDeg:
+			return EllipseConvention::RowColDeg;
+		case experiment::EvalEllipseConvention::ConcentricDeg:
+			return EllipseConvention::ConcentricDeg;
+		case experiment::EvalEllipseConvention::SyntheticOccludedDeg:
+			return EllipseConvention::SyntheticOccludedDeg;
+		}
+		return EllipseConvention::XYRad;
+	};
+
+	auto mapOrientation = [](experiment::EvalMatrixOrientation orientation)
+	{
+		switch (orientation)
+		{
+		case experiment::EvalMatrixOrientation::Auto:
+			return MatrixOrientation::Auto;
+		case experiment::EvalMatrixOrientation::RowsAreEllipses:
+			return MatrixOrientation::RowsAreEllipses;
+		case experiment::EvalMatrixOrientation::ColsAreEllipses:
+			return MatrixOrientation::ColsAreEllipses;
+		}
+		return MatrixOrientation::Auto;
+	};
+
+	auto mapResultFormat = [](experiment::EvalResultFormat format)
+	{
+		switch (format)
+		{
+		case experiment::EvalResultFormat::AamedFled:
+			return ResultFormat::AamedFled;
+		case experiment::EvalResultFormat::PlainRad:
+			return ResultFormat::PlainRad;
+		case experiment::EvalResultFormat::PlainDeg:
+			return ResultFormat::PlainDeg;
+		}
+		return ResultFormat::AamedFled;
+	};
+
+	EvalConfig config;
+	config.datasetRoot = shared.dataset.datasetRoot;
+	config.imagesDir = shared.dataset.imagesDir;
+	config.imageNamesPath = shared.dataset.imageNamesPath;
+	config.gtDir = shared.dataset.gtDir;
+	config.resultsDir = shared.dataset.resultsDir;
+	config.reportPath = shared.dataset.evalReportPath;
+	config.groundTruthSource = mapGroundTruthSource(shared.dataset.groundTruthSource);
+	config.groundTruthConvention = mapConvention(shared.dataset.groundTruthConvention);
+	config.gtMatrixOrientation = mapOrientation(shared.dataset.gtMatrixOrientation);
+	config.resultFormat = mapResultFormat(shared.dataset.resultFormat);
+	config.gtPrefix = shared.dataset.gtPrefix;
+	config.gtSuffix = shared.dataset.gtSuffix;
+	config.resultSuffix = shared.dataset.resultSuffix;
+	config.overlapThreshold = shared.dataset.overlapThreshold;
+	return config;
 }
 
 std::vector<std::string> readImageNames(const fs::path &path)
 {
+	if (!path.empty() && fs::exists(path))
+	{
 	std::ifstream in(path);
 	if (!in)
 	{
@@ -107,6 +188,36 @@ std::vector<std::string> readImageNames(const fs::path &path)
 			names.push_back(line);
 		}
 	}
+	return names;
+	}
+
+	return {};
+}
+
+std::vector<std::string> enumerateImageNames(const fs::path &imagesDir)
+{
+	if (!fs::exists(imagesDir))
+	{
+		throw std::runtime_error("Images directory does not exist: " + imagesDir.string());
+	}
+
+	std::vector<std::string> names;
+	for (const auto &entry : fs::directory_iterator(imagesDir))
+	{
+		if (!entry.is_regular_file())
+		{
+			continue;
+		}
+
+		const std::string extension = entry.path().extension().string();
+		if (extension == ".jpg" || extension == ".png" || extension == ".bmp" ||
+			extension == ".jpeg" || extension == ".tif" || extension == ".tiff")
+		{
+			names.push_back(entry.path().filename().string());
+		}
+	}
+
+	std::sort(names.begin(), names.end());
 	return names;
 }
 
@@ -775,7 +886,11 @@ int main()
 	try
 	{
 		const EvalConfig config = buildConfig();
-		const std::vector<std::string> imageNames = readImageNames(config.imageNamesPath);
+		std::vector<std::string> imageNames = readImageNames(config.imageNamesPath);
+		if (imageNames.empty())
+		{
+			imageNames = enumerateImageNames(config.imagesDir);
+		}
 
 		double posAll = 0.0;
 		double detAll = 0.0;

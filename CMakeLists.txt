@@ -37,6 +37,7 @@ add_executable(aamed_demo src/main.cpp)
 target_link_libraries(aamed_demo PRIVATE aamed_core)
 
 add_executable(aamed_eval tools/aamed_eval.cpp)
+target_include_directories(aamed_eval PRIVATE src)
 target_compile_definitions(aamed_eval PRIVATE AAMED_OPENCV_PROJECT_ROOT="${CMAKE_SOURCE_DIR}")
 
 set_target_properties(aamed_demo aamed_eval PROPERTIES

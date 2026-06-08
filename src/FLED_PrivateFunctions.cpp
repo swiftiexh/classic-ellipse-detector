@@ -111,15 +111,30 @@ void FLED::sortCombine(GPSD &fitComb, vector < cv::Vec<double, MAT_NUMBER> > arc
 	for (int i = 0; i < linking_num; i++) //r
 	{
 		val_r = arcMats[0][i][MAT_NUMBER - 1];
+		const double compat_r = computeGroupCompatibility(s_group[0][i]);
 		idx_i = i*linked_num;
 		for (int j = 0; j < linked_num; j++)
 		{
 			if (s_group[1][j].size() >= 2)
 			{
 				val_l = arcMats[1][j][MAT_NUMBER - 1];
+				const double compat_l = computeGroupCompatibility(s_group[1][j]);
+				const double compat_cross = computeCrossGroupCompatibility(s_group[1][j], s_group[0][i]);
 				fitComb[idx_i + j]->idx_r = i;
 				fitComb[idx_i + j]->idx_l = j;
-				fitComb[idx_i + j]->val = val_l + val_r;
+				if (_weightedArcConfig.enable)
+				{
+					fitComb[idx_i + j]->val =
+						(val_l + val_r) *
+						(1.0 +
+							_weightedArcConfig.pairCompatGain * compat_l +
+							_weightedArcConfig.pairCompatGain * compat_r +
+							_weightedArcConfig.crossCompatGain * compat_cross);
+				}
+				else
+				{
+					fitComb[idx_i + j]->val = val_l + val_r;
+				}
 			}
 			else
 			{
@@ -144,7 +159,17 @@ void FLED::sortCombine(GPSD &fitComb, vector < cv::Vec<double, MAT_NUMBER> > arc
 		//	}
 		//}
 		
-		fitComb[idx]->val = arcMats[0][i][MAT_NUMBER - 1];
+		const double compat_r = computeGroupCompatibility(s_group[0][i]);
+		if (_weightedArcConfig.enable)
+		{
+			fitComb[idx]->val =
+				arcMats[0][i][MAT_NUMBER - 1] *
+				(1.0 + _weightedArcConfig.singleCompatGain * compat_r);
+		}
+		else
+		{
+			fitComb[idx]->val = arcMats[0][i][MAT_NUMBER - 1];
+		}
 		fitComb[idx]->idx_r = i;
 		fitComb[idx]->idx_l = -1;
 	}
@@ -154,7 +179,17 @@ void FLED::sortCombine(GPSD &fitComb, vector < cv::Vec<double, MAT_NUMBER> > arc
 		idx = idx_i + i;
 		if (s_group[1][i].size() > 2)
 		{
-			fitComb[idx]->val = arcMats[1][i][MAT_NUMBER - 1];
+			const double compat_l = computeGroupCompatibility(s_group[1][i]);
+			if (_weightedArcConfig.enable)
+			{
+				fitComb[idx]->val =
+					arcMats[1][i][MAT_NUMBER - 1] *
+					(1.0 + _weightedArcConfig.singleCompatGain * compat_l);
+			}
+			else
+			{
+				fitComb[idx]->val = arcMats[1][i][MAT_NUMBER - 1];
+			}
 			fitComb[idx]->idx_l = i;
 			fitComb[idx]->idx_r = -1;
 		}

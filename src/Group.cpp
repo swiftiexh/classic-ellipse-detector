@@ -412,6 +412,19 @@ void FLED::BiDirectionVerification(GPSD &fitComb, vector < cv::Vec<double, MAT_N
 		if (fitres == false)
 			continue;
 
+		if (_weightedArcConfig.enable && _weightedArcConfig.selectBestValidatedCandidate)
+		{
+			if (detScore > max_score)
+			{
+				max_idx = i;
+				max_score = detScore;
+				max_idx_l = idx_l;
+				max_idx_r = idx_r;
+				max_ellipse = fitelpres;
+			}
+			continue;
+		}
+
 		//if (detScore > max_score)
 		//	max_idx = i, max_score = detScore, max_idx_l = idx_l, max_idx_r = idx_r, max_ellipse = fitelpres;
 
@@ -441,6 +454,18 @@ void FLED::BiDirectionVerification(GPSD &fitComb, vector < cv::Vec<double, MAT_N
 	//	arc_grouped[search_group[0][max_idx_r][k]] = 1;
 	//detEllipses.push_back(max_ellipse);
 	//detEllipseScore.push_back(max_score);
+
+	if (_weightedArcConfig.enable && _weightedArcConfig.selectBestValidatedCandidate && max_idx >= 0)
+	{
+		num_idx_l = max_idx_l >= 0 ? search_group[1][max_idx_l].size() : -1;
+		num_idx_r = max_idx_r >= 0 ? search_group[0][max_idx_r].size() : -1;
+		for (int k = 0; k < num_idx_l; k++)
+			arc_grouped[search_group[1][max_idx_l][k]] = 1;
+		for (int k = 0; k < num_idx_r; k++)
+			arc_grouped[search_group[0][max_idx_r][k]] = 1;
+		detEllipses.push_back(max_ellipse);
+		detEllipseScore.push_back(max_score);
+	}
 
 
 }

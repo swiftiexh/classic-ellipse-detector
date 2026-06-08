@@ -1,5 +1,7 @@
+#include "ExperimentConfig.h"
 #include "FLED.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -11,64 +13,10 @@ namespace fs = std::filesystem;
 
 namespace
 {
-enum class RunMode
-{
-	SingleImage,
-	DatasetBatch
-};
-
-struct DetectorParams
-{
-	double thetaArc = CV_PI / 3.0;
-	double lambdaArc = 3.4;
-	double validationThreshold = 0.77;
-};
-
-struct SingleImageConfig
-{
-	fs::path inputPath;
-	fs::path outputDir;
-	bool exportDebug = true;
-	bool quiet = false;
-};
-
-struct DatasetBatchConfig
-{
-	fs::path datasetRoot;
-	fs::path imagesDir;
-	fs::path imageNamesPath;
-	fs::path resultsDir;
-	bool exportDebug = false;
-	bool quiet = true;
-};
-
-struct AppConfig
-{
-	RunMode mode = RunMode::SingleImage;
-	DetectorParams detector;
-	SingleImageConfig single;
-	DatasetBatchConfig batch;
-};
-
-AppConfig buildConfig()
-{
-	const fs::path projectRoot(AAMED_OPENCV_PROJECT_ROOT);
-
-	AppConfig config;
-	config.mode = RunMode::SingleImage;
-	config.single.inputPath = projectRoot / "demo" / "033_0053.jpg";
-	config.single.outputDir = projectRoot / "output" / "single";
-
-	config.batch.datasetRoot = projectRoot / "dataset";
-	config.batch.imagesDir = config.batch.datasetRoot / "images";
-	config.batch.imageNamesPath = config.batch.datasetRoot / "imagenames.txt";
-	config.batch.resultsDir = projectRoot / "output" / "dataset";
-
-	return config;
-}
-
 std::vector<std::string> readImageNames(const fs::path &path)
 {
+	if (!path.empty() && fs::exists(path))
+	{
 	std::ifstream in(path);
 	if (!in)
 	{
@@ -84,6 +32,36 @@ std::vector<std::string> readImageNames(const fs::path &path)
 			names.push_back(line);
 		}
 	}
+	return names;
+	}
+
+	return {};
+}
+
+std::vector<std::string> enumerateImageNames(const fs::path &imagesDir)
+{
+	if (!fs::exists(imagesDir))
+	{
+		throw std::runtime_error("Images directory does not exist: " + imagesDir.string());
+	}
+
+	std::vector<std::string> names;
+	for (const auto &entry : fs::directory_iterator(imagesDir))
+	{
+		if (!entry.is_regular_file())
+		{
+			continue;
+		}
+
+		const std::string extension = entry.path().extension().string();
+		if (extension == ".jpg" || extension == ".png" || extension == ".bmp" ||
+			extension == ".jpeg" || extension == ".tif" || extension == ".tiff")
+		{
+			names.push_back(entry.path().filename().string());
+		}
+	}
+
+	std::sort(names.begin(), names.end());
 	return names;
 }
 
@@ -114,7 +92,7 @@ fs::path resolveImagePath(const fs::path &imagesDir, const std::string &imageNam
 	return directPath;
 }
 
-double totalDetectionTimeMs(const cv::Vec<double, 10> &detailTime)
+double detailBreakdownTotalMs(const cv::Vec<double, 10> &detailTime)
 {
 	return detailTime[0] + detailTime[1] + detailTime[2] + detailTime[3] + detailTime[6] + detailTime[9];
 }
@@ -138,13 +116,14 @@ struct DetectionRunResult
 	bool success = false;
 	size_t detections = 0;
 	double totalMs = 0.0;
+	double detailBreakdownMs = 0.0;
 	fs::path resultFilePath;
 };
 
 DetectionRunResult runDetection(
 	const fs::path &inputPath,
 	const fs::path &outputDir,
-	const DetectorParams &detector,
+	const experiment::ExperimentConfig &config,
 	bool exportDebug,
 	bool quiet,
 	bool writeVisualization)
@@ -169,14 +148,35 @@ DetectionRunResult runDetection(
 	cv::Mat imgGray;
 	cv::cvtColor(imgColor, imgGray, cv::COLOR_BGR2GRAY);
 
-	AAMED aamed(imgGray.rows + 16, imgGray.cols + 16);
-	aamed.SetParameters(detector.thetaArc, detector.lambdaArc, detector.validationThreshold);
-	aamed.run_FLED(imgGray);
+	int maxScale = 1;
+	if (config.multiScaleFpn.enable)
+	{
+		for (int scale : config.multiScaleFpn.scales)
+		{
+			maxScale = std::max(maxScale, scale);
+		}
+	}
+
+	AAMED aamed(imgGray.rows * maxScale + 16, imgGray.cols * maxScale + 16);
+	aamed.SetParameters(config.detector.thetaArc, config.detector.lambdaArc, config.detector.validationThreshold);
+	aamed.SetWeightedArcConfig(config.weightedArc);
+	aamed.SetMultiScaleConfig(config.multiScaleFpn);
+	aamed.SetSmallEllipseGuardConfig(config.smallEllipseGuard);
+
+	const double tic = cv::getTickCount();
+	if (config.multiScaleFpn.enable)
+	{
+		aamed.run_FLED_MultiScale(imgGray);
+	}
+	else
+	{
+		aamed.run_FLED(imgGray);
+	}
+	result.totalMs = (cv::getTickCount() - tic) * 1000.0 / cv::getTickFrequency();
 
 	cv::Vec<double, 10> detailTime = cv::Vec<double, 10>::all(0);
 	aamed.showDetailBreakdown(detailTime, quiet ? 0 : 1);
-
-	result.totalMs = totalDetectionTimeMs(detailTime);
+	result.detailBreakdownMs = detailBreakdownTotalMs(detailTime);
 	result.detections = aamed.detEllipses.size();
 	result.resultFilePath = outputDir / (inputPath.filename().string() + ".fled.txt");
 
@@ -199,7 +199,8 @@ DetectionRunResult runDetection(
 		timingOut << "EllipseFittingMs " << detailTime[3] << '\n';
 		timingOut << "EllipseValidationMs " << detailTime[6] << '\n';
 		timingOut << "EllipseClusterMs " << detailTime[9] << '\n';
-		timingOut << "TotalMs " << result.totalMs << '\n';
+		timingOut << "DetailBreakdownTotalMs " << result.detailBreakdownMs << '\n';
+		timingOut << "WallClockTotalMs " << result.totalMs << '\n';
 
 		aamed.writeDetectionsTable((outputDir / "detections.txt").string());
 	}
@@ -215,12 +216,12 @@ DetectionRunResult runDetection(
 	return result;
 }
 
-int runSingleImageMode(const AppConfig &config)
+int runSingleImageMode(const experiment::ExperimentConfig &config)
 {
 	const DetectionRunResult result = runDetection(
 		config.single.inputPath,
 		config.single.outputDir,
-		config.detector,
+		config,
 		config.single.exportDebug,
 		config.single.quiet,
 		true);
@@ -231,6 +232,7 @@ int runSingleImageMode(const AppConfig &config)
 	}
 
 	std::cout << "Mode: SingleImage\n";
+	std::cout << "Experiment: " << config.experimentLabel << '\n';
 	std::cout << "Input: " << config.single.inputPath.string() << '\n';
 	std::cout << "Detections: " << result.detections << '\n';
 	std::cout << "TotalMs: " << result.totalMs << '\n';
@@ -242,12 +244,16 @@ int runSingleImageMode(const AppConfig &config)
 	return 0;
 }
 
-int runDatasetBatchMode(const AppConfig &config)
+int runDatasetBatchMode(const experiment::ExperimentConfig &config)
 {
-	const std::vector<std::string> imageNames = readImageNames(config.batch.imageNamesPath);
-	fs::create_directories(config.batch.resultsDir);
+	std::vector<std::string> imageNames = readImageNames(config.dataset.imageNamesPath);
+	if (imageNames.empty())
+	{
+		imageNames = enumerateImageNames(config.dataset.imagesDir);
+	}
+	fs::create_directories(config.dataset.resultsDir);
 
-	std::ofstream summaryOut(config.batch.resultsDir / "batch_summary.txt");
+	std::ofstream summaryOut(config.dataset.resultsDir / "batch_summary.txt");
 	summaryOut << "ImageName Detections TotalMs Status\n";
 
 	size_t successCount = 0;
@@ -256,13 +262,13 @@ int runDatasetBatchMode(const AppConfig &config)
 
 	for (const std::string &imageName : imageNames)
 	{
-		const fs::path inputPath = resolveImagePath(config.batch.imagesDir, imageName);
+		const fs::path inputPath = resolveImagePath(config.dataset.imagesDir, imageName);
 		const DetectionRunResult result = runDetection(
 			inputPath,
-			config.batch.resultsDir,
-			config.detector,
-			config.batch.exportDebug,
-			config.batch.quiet,
+			config.dataset.resultsDir,
+			config,
+			config.dataset.exportDebug,
+			config.dataset.quiet,
 			false);
 
 		if (!result.success)
@@ -286,11 +292,12 @@ int runDatasetBatchMode(const AppConfig &config)
 	summaryOut << "Summary " << successCount << ' ' << totalDetections << ' ' << averageMs << " AVG_MS\n";
 
 	std::cout << "Mode: DatasetBatch\n";
-	std::cout << "DatasetRoot: " << config.batch.datasetRoot.string() << '\n';
+	std::cout << "Experiment: " << config.experimentLabel << '\n';
+	std::cout << "DatasetRoot: " << config.dataset.datasetRoot.string() << '\n';
 	std::cout << "ProcessedImages: " << successCount << "/" << imageNames.size() << '\n';
 	std::cout << "TotalDetections: " << totalDetections << '\n';
 	std::cout << "AverageMs: " << averageMs << '\n';
-	std::cout << "ResultsDir: " << config.batch.resultsDir.string() << '\n';
+	std::cout << "ResultsDir: " << config.dataset.resultsDir.string() << '\n';
 	return successCount == imageNames.size() ? 0 : 1;
 }
 }
@@ -299,8 +306,8 @@ int main()
 {
 	try
 	{
-		const AppConfig config = buildConfig();
-		if (config.mode == RunMode::SingleImage)
+		const experiment::ExperimentConfig config = experiment::BuildExperimentConfig();
+		if (config.mode == experiment::RunMode::SingleImage)
 		{
 			return runSingleImageMode(config);
 		}
