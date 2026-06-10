@@ -885,6 +885,12 @@ int main()
 {
 	try
 	{
+		const experiment::ExperimentConfig sharedConfig = experiment::BuildExperimentConfig();
+		if (experiment::ShouldPrintConfig())
+		{
+			experiment::PrintExperimentConfig(sharedConfig, std::cout);
+			return 0;
+		}
 		const EvalConfig config = buildConfig();
 		std::vector<std::string> imageNames = readImageNames(config.imageNamesPath);
 		if (imageNames.empty())

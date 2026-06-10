@@ -307,6 +307,11 @@ int main()
 	try
 	{
 		const experiment::ExperimentConfig config = experiment::BuildExperimentConfig();
+		if (experiment::ShouldPrintConfig())
+		{
+			experiment::PrintExperimentConfig(config, std::cout);
+			return 0;
+		}
 		if (config.mode == experiment::RunMode::SingleImage)
 		{
 			return runSingleImageMode(config);

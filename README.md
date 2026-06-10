@@ -79,6 +79,17 @@ build/bin/aamed_eval.exe
 .\build\bin\aamed_eval.exe
 ```
 
+也可以通过环境变量覆盖 `ExperimentConfig.h` 中的默认数据集和方法，无需重新编译：
+
+```powershell
+$env:AAMED_DATASET = "random"
+$env:AAMED_METHODS = "weighted_arc,small_ellipse_guard"
+.\build\cmake_build\bin\Release\aamed_demo.exe
+.\build\cmake_build\bin\Release\aamed_eval.exe
+```
+
+支持的数据集短名包括 `prasad`、`random`、`concentric`、`concurrent` 和 `smartphone`。方法名包括 `baseline`、`weighted_arc`、`multi_scale_fpn` 和 `small_ellipse_guard`。
+
 运行前只需要修改一个文件：
 
 - [src/ExperimentConfig.h](/d:/CVProject/AAMED_OpenCV/src/ExperimentConfig.h:1)
@@ -94,14 +105,12 @@ build/bin/aamed_eval.exe
 
 ## 输出目录
 
-当前输出目录按实验标签自动生成，例如：
+当前输出目录按数据集和实验标签自动生成，例如：
 
-- `output/baseline`
-- `output/weighted_arc`
-- `output/multi_scale_fpn`
-- `output/small_ellipse_guard`
-- `output/weighted_arc__multi_scale_fpn`
-- `output/weighted_arc__multi_scale_fpn__small_ellipse_guard`
+- `output/prasad/baseline`
+- `output/random/weighted_arc`
+- `output/prasad/weighted_arc__multi_scale_fpn`
+- `output/random/weighted_arc__multi_scale_fpn__small_ellipse_guard`
 
 单图模式输出在：
 
@@ -121,4 +130,5 @@ build/bin/aamed_eval.exe
 
 - 当前仓库采用“源码内统一配置”的方式，不再依赖复杂命令行参数。
 - 对于不同数据集的 GT 命名、评测口径和 overlap 阈值，已经统一封装进实验配置。
+- `tools/run_benchmark_matrix.ps1` 可自动运行 Prasad 与 Random 的缺失实验矩阵并生成 CSV、Markdown 汇总。
 - 更详细的配置说明、参数解释和推荐实验顺序，请参考 [实验配置说明.md](/d:/CVProject/AAMED_OpenCV/实验配置说明.md:1)。

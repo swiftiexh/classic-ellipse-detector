@@ -1,7 +1,13 @@
 #pragma once
 
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <filesystem>
+#include <ostream>
+#include <stdexcept>
 #include <string>
+#include <sstream>
 #include <vector>
 
 // ==============================
@@ -151,6 +157,7 @@ struct DatasetConfig
 struct ExperimentConfig
 {
 	RunMode mode = RunMode::DatasetBatch;
+	std::string datasetLabel = "prasad";
 	std::string experimentLabel = "baseline";
 	DetectorParams detector;
 	WeightedArcConfig weightedArc;
@@ -189,11 +196,84 @@ inline std::string BuildMethodLabel(
 	return label.empty() ? "baseline" : label;
 }
 
-inline DatasetConfig BuildDatasetConfig(const fs::path &projectRoot, DatasetPreset preset, const std::string &experimentLabel)
+inline std::string DatasetLabel(DatasetPreset preset)
+{
+	switch (preset)
+	{
+	case DatasetPreset::Prasad: return "prasad";
+	case DatasetPreset::ConcentricSynthetic: return "concentric_synthetic";
+	case DatasetPreset::ConcurrentSynthetic: return "concurrent_synthetic";
+	case DatasetPreset::Random1: return "random";
+	case DatasetPreset::Smartphone2: return "smartphone";
+	}
+	return "unknown";
+}
+
+inline std::string NormalizeToken(std::string value)
+{
+	std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch)
+	{
+		return static_cast<char>(std::tolower(ch));
+	});
+	std::replace(value.begin(), value.end(), '-', '_');
+	return value;
+}
+
+inline DatasetPreset ParseDatasetPreset(const std::string &value)
+{
+	const std::string normalized = NormalizeToken(value);
+	if (normalized == "prasad") return DatasetPreset::Prasad;
+	if (normalized == "random") return DatasetPreset::Random1;
+	if (normalized == "concentric" || normalized == "concentric_synthetic") return DatasetPreset::ConcentricSynthetic;
+	if (normalized == "concurrent" || normalized == "concurrent_synthetic") return DatasetPreset::ConcurrentSynthetic;
+	if (normalized == "smartphone") return DatasetPreset::Smartphone2;
+	throw std::runtime_error("Unknown AAMED_DATASET value: " + value);
+}
+
+inline void ApplyMethodOverride(const std::string &value, ExperimentConfig &config)
+{
+	config.weightedArc.enable = false;
+	config.multiScaleFpn.enable = false;
+	config.smallEllipseGuard.enable = false;
+
+	std::istringstream in(value);
+	std::string token;
+	while (std::getline(in, token, ','))
+	{
+		token = NormalizeToken(token);
+		token.erase(std::remove_if(token.begin(), token.end(), [](unsigned char ch) { return std::isspace(ch) != 0; }), token.end());
+		if (token.empty() || token == "baseline")
+		{
+			continue;
+		}
+		if (token == "weighted_arc")
+		{
+			config.weightedArc.enable = true;
+		}
+		else if (token == "multi_scale_fpn")
+		{
+			config.multiScaleFpn.enable = true;
+		}
+		else if (token == "small_ellipse_guard")
+		{
+			config.smallEllipseGuard.enable = true;
+		}
+		else
+		{
+			throw std::runtime_error("Unknown AAMED_METHODS value: " + token);
+		}
+	}
+}
+
+inline DatasetConfig BuildDatasetConfig(
+	const fs::path &projectRoot,
+	DatasetPreset preset,
+	const std::string &datasetLabel,
+	const std::string &experimentLabel)
 {
 	DatasetConfig config;
 	config.preset = preset;
-	config.resultsDir = projectRoot / "output" / experimentLabel;
+	config.resultsDir = projectRoot / "output" / datasetLabel / experimentLabel;
 	config.evalReportPath = config.resultsDir / "eval_report.txt";
 
 	switch (preset)
@@ -285,25 +365,55 @@ inline ExperimentConfig BuildExperimentConfig()
 #endif
 
 #if EXP_DATASET_PRESET == EXP_DATASET_PRESET_CONCENTRIC_SYNTHETIC
-	const DatasetPreset datasetPreset = DatasetPreset::ConcentricSynthetic;
+	DatasetPreset datasetPreset = DatasetPreset::ConcentricSynthetic;
 #elif EXP_DATASET_PRESET == EXP_DATASET_PRESET_CONCURRENT_SYNTHETIC
-	const DatasetPreset datasetPreset = DatasetPreset::ConcurrentSynthetic;
+	DatasetPreset datasetPreset = DatasetPreset::ConcurrentSynthetic;
 #elif EXP_DATASET_PRESET == EXP_DATASET_PRESET_RANDOM_1
-	const DatasetPreset datasetPreset = DatasetPreset::Random1;
+	DatasetPreset datasetPreset = DatasetPreset::Random1;
 #elif EXP_DATASET_PRESET == EXP_DATASET_PRESET_SMARTPHONE_2
-	const DatasetPreset datasetPreset = DatasetPreset::Smartphone2;
+	DatasetPreset datasetPreset = DatasetPreset::Smartphone2;
 #else
-	const DatasetPreset datasetPreset = DatasetPreset::Prasad;
+	DatasetPreset datasetPreset = DatasetPreset::Prasad;
 #endif
 
+	if (const char *datasetOverride = std::getenv("AAMED_DATASET"))
+	{
+		datasetPreset = ParseDatasetPreset(datasetOverride);
+	}
+	if (const char *methodOverride = std::getenv("AAMED_METHODS"))
+	{
+		ApplyMethodOverride(methodOverride, config);
+	}
+
+	config.datasetLabel = DatasetLabel(datasetPreset);
 	config.experimentLabel = BuildMethodLabel(
 		config.weightedArc,
 		config.multiScaleFpn,
 		config.smallEllipseGuard);
-	config.dataset = BuildDatasetConfig(projectRoot, datasetPreset, config.experimentLabel);
+	config.dataset = BuildDatasetConfig(projectRoot, datasetPreset, config.datasetLabel, config.experimentLabel);
 	config.single.inputPath = projectRoot / "demo" / "033_0053.jpg";
-	config.single.outputDir = projectRoot / "output" / "single" / config.experimentLabel;
+	config.single.outputDir = projectRoot / "output" / "single" / config.datasetLabel / config.experimentLabel;
 
 	return config;
+}
+
+inline bool ShouldPrintConfig()
+{
+	const char *value = std::getenv("AAMED_PRINT_CONFIG");
+	return value != nullptr && std::string(value) == "1";
+}
+
+inline void PrintExperimentConfig(const ExperimentConfig &config, std::ostream &out)
+{
+	out << "Dataset: " << config.datasetLabel << '\n';
+	out << "Experiment: " << config.experimentLabel << '\n';
+	out << "WeightedArc: " << (config.weightedArc.enable ? 1 : 0) << '\n';
+	out << "MultiScaleFpn: " << (config.multiScaleFpn.enable ? 1 : 0) << '\n';
+	out << "SmallEllipseGuard: " << (config.smallEllipseGuard.enable ? 1 : 0) << '\n';
+	out << "DatasetRoot: " << config.dataset.datasetRoot.string() << '\n';
+	out << "ResultsDir: " << config.dataset.resultsDir.string() << '\n';
+	out << "GtPrefix: " << config.dataset.gtPrefix << '\n';
+	out << "OverlapThreshold: " << config.dataset.overlapThreshold << '\n';
+	out << "GroundTruthConvention: " << static_cast<int>(config.dataset.groundTruthConvention) << '\n';
 }
 }
