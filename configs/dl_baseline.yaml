@@ -1,0 +1,39 @@
+seed: 3407
+device: cuda
+input_size: 512
+output_stride: 4
+slots: 5
+topk: 200
+score_threshold: 0.1
+datasets: [prasad, random, smartphone]
+
+model:
+  pretrained: false
+
+loss:
+  heatmap: 1.0
+  offset: 1.0
+  axes: 0.5
+  angle: 0.2
+
+train:
+  run_name: baseline
+  batch_size: 8
+  steps: 2000
+  learning_rate: 0.001
+  weight_decay: 0.0
+  amp: true
+  num_workers: 0
+  log_interval: 20
+  eval_interval: 200
+  overfit_per_dataset: 0
+  validation_fraction: 0.15
+  test_fraction: 0.15
+
+evaluate:
+  iou_threshold: 0.8
+  save_visualizations: 12
+
+benchmark:
+  warmup: 30
+  iterations: 100
